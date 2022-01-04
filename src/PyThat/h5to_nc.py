@@ -256,7 +256,23 @@ class MeasurementTree:
         dims = tuple(dims)
         shape.reverse()
         self.shape = tuple(shape)+data_shape
-        self.data = np.reshape(self.data, self.shape)
+        try:
+            self.data = np.reshape(self.data, self.shape)
+        except ValueError:
+            print('Measurement not finished?')
+            print(f'Desired shape: {self.shape}, data shape: {self.data.shape}, size: {self.data.size}')
+            flattened_length = np.prod(shape)
+            flattened_length_data = self.data.shape[0]
+            if not flattened_length_data == int(self.data.size/np.prod(data_shape)):
+                raise ValueError('The dimensions extracted from the measurement tree dont add up')
+            print(f'Number of core measurements: {flattened_length_data} of {flattened_length}')
+            flattened_shape = (flattened_length,)+data_shape
+            print(f'flattened shape: {flattened_shape}')
+            flattened_new = np.empty(flattened_shape)
+            flattened_new[...] = np.nan
+            flattened_new[0:flattened_length_data, ...] = self.data
+            self.data = np.reshape(flattened_new, self.shape)
+
         self.array = xr.DataArray(self.data, dims=dims, coords=coords, name=self.control_name)
 
         # Add units to Attributes
