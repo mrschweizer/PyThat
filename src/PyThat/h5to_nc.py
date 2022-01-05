@@ -141,7 +141,7 @@ class MeasurementTree:
                               'waiting period (ms)',
                               'repetitions']
                 values = []
-                printout = f'({group}, {row}) "{i}": '.format(group, row)
+                printout = f'({group}, {row}) "{i}": '
 
                 for name in properties:
                     try:
