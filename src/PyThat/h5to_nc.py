@@ -112,9 +112,7 @@ class MeasurementTree:
                     print('Expected behaviour: Last group does not have a parent.')
 
             previous_indent = new_indent
-        print(f'new tree:')
-        for o in self.new_tree:
-            print(f'element: {o}, parent row:  {o.parent_row}, indent: {o.tree_indent}')
+
         # Assemble siblings
         # These are groups which depend on the same parent row
         print('Number of groups: {}'.format(len(self.new_tree)))
@@ -203,7 +201,8 @@ class MeasurementTree:
                 units.append(g.group()[1:-1])
                 control_name = control_name[0:g.start()].rstrip()
             except AttributeError:
-                units.append("")
+                if self.definition[parent_row]['function'] in ['scalar control']:
+                    units.append("")
 
             try:
                 row_data = parent.get_data()
