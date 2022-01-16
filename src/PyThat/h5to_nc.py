@@ -29,14 +29,21 @@ class MeasurementTree:
         self.index: tuple or None = index
         self.control_name = None
         self.save_path: None or pl.Path = None
+        self.tree_string = None
+        self.labbook = None
+        self.devices = None
         if not override:
             try:
                 self.open_netcdf()
             except AttributeError:
                 self.construct_tree()
+                if not index:
+                    return
                 self.save_netcdf()
         else:
             self.construct_tree()
+            if not index:
+                return
             self.save_netcdf()
 
     def list_hdf5(self):
@@ -64,6 +71,8 @@ class MeasurementTree:
 
     def construct_tree(self, data_index: tuple or None = None):
         self.definition = {i: self.convert_to_dict(k) for (i, k) in self.f['scan_definition'].items()}
+        self.devices = {i: self.convert_to_dict(k) for (i, k) in self.f['devices'].items()}
+        self.labbook = {i: self.convert_to_dict(k) for (i, k) in self.f['labbook'].items()}
         """
         ////////////////////////////////////////////////////////
         This reconstructs the multidimensional measurement tree.
@@ -129,6 +138,7 @@ class MeasurementTree:
                     k.siblings.append(j)
 
         """List Measurement Tree"""
+        print_tree_list = []
         for group, j in enumerate(self.new_tree):
             for row, (i, k) in enumerate(j.group_entries.items()):
                 properties = ['function',
@@ -152,7 +162,11 @@ class MeasurementTree:
                     printout += ' ' + str(self.get_data(i).shape)
                 except KeyError:
                     pass
-                print(textwrap.indent(printout, ' '*2*int(j.tree_indent)))
+                line = textwrap.indent(printout, ' '*2*int(j.tree_indent))
+                print_tree_list.append(line)
+                print(line)
+        self.tree_string = '\n'.join(print_tree_list)
+
 
         if self.index is None:
             # Get and parse user input for group and entry for self.target and self.index
@@ -165,6 +179,8 @@ class MeasurementTree:
                 except ValueError:
                     print("Input must be two integers, separated by a comma.")
                     x = (0, 0)
+        elif not self.index:
+            return
         else:
             x = self.index
 
