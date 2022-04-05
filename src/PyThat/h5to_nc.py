@@ -3,12 +3,12 @@ import numpy as np
 import pathlib as pl
 import textwrap
 import xarray as xr
-import os
-import io
+# import os
+# import io
 
 
 class MeasurementTree:
-    def __init__(self, filepath, index=None, override: bool =False):
+    def __init__(self, filepath, index=None, override: bool = False):
         """
         :param filepath: r-string that points to h5 file
         :param index: optional: tuple that describes group number and group internal number
@@ -32,6 +32,7 @@ class MeasurementTree:
         self.tree_string = None
         self.labbook = None
         self.devices = None
+        self.logs = None
         if not override:
             try:
                 self.open_netcdf()
@@ -73,6 +74,7 @@ class MeasurementTree:
         self.definition = {i: self.convert_to_dict(k) for (i, k) in self.f['scan_definition'].items()}
         self.devices = {i: self.convert_to_dict(k) for (i, k) in self.f['devices'].items()}
         self.labbook = {i: self.convert_to_dict(k) for (i, k) in self.f['labbook'].items()}
+        self.logs = self.convert_to_dict(self.f['measurement/log'])
         """
         ////////////////////////////////////////////////////////
         This reconstructs the multidimensional measurement tree.
@@ -167,7 +169,7 @@ class MeasurementTree:
                 print(line)
         self.tree_string = '\n'.join(print_tree_list)
 
-
+        """User Input Index"""
         if self.index is None:
             # Get and parse user input for group and entry for self.target and self.index
             print("Please enter the Group number and the group internal number.")
