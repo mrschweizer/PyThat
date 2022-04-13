@@ -342,7 +342,8 @@ class MeasurementTree:
         :parameter obj: dataset object which should be converted
         :parameter truncate: bool, defines if '[]' will be cut
         """
-
+        if not isinstance(obj, h5py.Dataset):
+            return {}
         """Problem: In den Thatec Daten gibt es teils metadaten in denen die gleichen Keys mehrmals vorkommen.
         Dies führt dazu, dass diese überschrieben werden."""
         a = {}
