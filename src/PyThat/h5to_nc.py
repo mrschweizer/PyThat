@@ -94,7 +94,8 @@ class MeasurementTree:
                 if not key in control_keys:
                     control_keys.append(key)
                 else:
-                    key = f'{key}_{v}'
+                    while key in control_keys:
+                        key = f'{key}+'
                     u['control name'] = key
                     control_keys.append(key)
             except KeyError:
