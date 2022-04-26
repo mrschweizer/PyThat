@@ -87,6 +87,19 @@ class MeasurementTree:
         indent_list = sorted(self.definition, key=lambda z: self.definition[z]['tree indent level'], reverse=True)
         """
 
+        control_keys = []
+        for v, u in self.definition.items():
+            try:
+                key = u['control name']
+                if not key in control_keys:
+                    control_keys.append(key)
+                else:
+                    key = f'{key}_{v}'
+                    u['control name'] = key
+                    control_keys.append(key)
+            except KeyError:
+                pass
+
         # The first step should be grouping adjacent rows with the same tree indent level
         # Initialize the indentation
         self.new_tree = [Group(self)]
@@ -212,12 +225,12 @@ class MeasurementTree:
                 control_name = self.definition[parent_row]["control name"]
             except KeyError as key:
                 print(key)
-
             # Get units from paranthesis in control name
             try:
                 g = find_units.search(control_name)
-                units.append(g.group()[1:-1])
-                control_name = control_name[0:g.start()].rstrip()
+                unit = g.group()
+                units.append(unit[1:-1])
+                control_name = control_name.replace(unit, "").rstrip()
             except AttributeError:
                 if self.definition[parent_row]['function'] in ['scalar control']:
                     units.append("")
@@ -227,7 +240,10 @@ class MeasurementTree:
                 # Add shape of dimension to shape list
                 shape.append(row_data.shape[0])
                 # Add control name as key to the coords dict. Assign data to that key.
+                while control_name in coords.keys():
+                    control_name = control_name+'+'
                 coords[control_name] = row_data
+
 
             except KeyError as err:
                 if self.definition[parent_row]['function'] == 'internal - repetitions':
@@ -249,6 +265,8 @@ class MeasurementTree:
                         row_data = np.linspace(self.definition[parent_row]['start'],
                                                self.definition[parent_row]['stop'],
                                                int(self.definition[parent_row]['steps']))
+                    while control_name in coords.keys():
+                        control_name = control_name + '+'
                     coords[control_name] = row_data
                     try:
                         shape.append(int(self.definition[parent_row]['steps']))
@@ -271,6 +289,7 @@ class MeasurementTree:
             units.append(self.get_metadata(self.target[row][0])['unit'][i])
 
         dims = tuple(dims)
+        print(dims)
         shape.reverse()
         self.shape = tuple(shape)+data_shape
         try:
@@ -336,6 +355,15 @@ class MeasurementTree:
         return metadata
 
     @staticmethod
+    def check_for_sp_char(text):
+        import re
+        special_char = re.compile(r"%%%(\d+)%%%")
+        res = special_char.finditer(text)
+        for v in res:
+            text = text.replace(v.group(), chr(int(v.group(1))))
+        return text
+
+    @staticmethod
     def convert_to_dict(obj: h5py.Dataset, truncate=False):
         """This function takes data sets as saved by thatec os and converts them into dictionaries.
         Works for filetype '|o'
@@ -357,15 +385,20 @@ class MeasurementTree:
                 elif test_string == 'true':
                     z = True
                 else:
-                    z = test_string
+                    z = MeasurementTree.check_for_sp_char(test_string)
+            key = MeasurementTree.check_for_sp_char(x[0])
             try:
-                q = a[x[0]]
+                # Check if entry exists
+                q = a[key]
+                # If not already, make it a list
                 if not isinstance(q, list):
                     q = [q]
+                # Append new entry to said list
                 q.append(z)
-                a[x[0]] = q
+                a[key] = q
             except KeyError:
-                a[x[0]] = z
+                # If it doesn't exist, create entry
+                a[key] = z
         return a
 
 
