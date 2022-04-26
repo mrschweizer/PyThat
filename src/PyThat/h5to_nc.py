@@ -219,7 +219,7 @@ class MeasurementTree:
         units = []
 
         from re import compile, search
-        find_units = compile(r'\(.+\)')
+        find_units = compile(r' *\(.+\) *')
 
         while parent is not None:
             try:
@@ -230,7 +230,7 @@ class MeasurementTree:
             try:
                 g = find_units.search(control_name)
                 unit = g.group()
-                units.append(unit[1:-1])
+                units.append(unit.rstrip().lstrip()[1:-1])
                 control_name = control_name.replace(unit, "").rstrip()
             except AttributeError:
                 if self.definition[parent_row]['function'] in ['scalar control']:
