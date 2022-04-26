@@ -87,19 +87,7 @@ class MeasurementTree:
         indent_list = sorted(self.definition, key=lambda z: self.definition[z]['tree indent level'], reverse=True)
         """
 
-        control_keys = []
-        for v, u in self.definition.items():
-            try:
-                key = u['control name']
-                if not key in control_keys:
-                    control_keys.append(key)
-                else:
-                    while key in control_keys:
-                        key = f'{key}+'
-                    u['control name'] = key
-                    control_keys.append(key)
-            except KeyError:
-                pass
+
 
         # The first step should be grouping adjacent rows with the same tree indent level
         # Initialize the indentation
@@ -210,6 +198,22 @@ class MeasurementTree:
         data_shape = tuple(list(self.data.shape)[1:])
         parent: Group = self.target.parent_group
         parent_row = self.target.parent_row
+
+        # Check control names for duplicate and rename
+        control_keys = []
+        for v, u in self.definition.items():
+            try:
+                key = u['control name']
+                if not key in control_keys:
+                    control_keys.append(key)
+                else:
+                    while key in control_keys:
+                        key = f'{key}+'
+                    u['control name'] = key
+                    control_keys.append(key)
+            except KeyError:
+                pass
+
 
         """
         Go through all parents and add control names to dimension names.
