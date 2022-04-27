@@ -87,8 +87,6 @@ class MeasurementTree:
         indent_list = sorted(self.definition, key=lambda z: self.definition[z]['tree indent level'], reverse=True)
         """
 
-
-
         # The first step should be grouping adjacent rows with the same tree indent level
         # Initialize the indentation
         self.new_tree = [Group(self)]
@@ -143,6 +141,7 @@ class MeasurementTree:
 
         """List Measurement Tree"""
         print_tree_list = []
+        possible_indicators = []
         for group, j in enumerate(self.new_tree):
             for row, (i, k) in enumerate(j.group_entries.items()):
                 properties = ['function',
@@ -160,7 +159,11 @@ class MeasurementTree:
                         values.append(k[name])
                     except KeyError:
                         pass
-
+                try:
+                    if k['function'] == 'indicator':
+                        possible_indicators.append((group, row))
+                except KeyError:
+                    pass
                 printout += str(values)
                 try:
                     printout += ' ' + str(self.get_data(i).shape)
@@ -170,6 +173,7 @@ class MeasurementTree:
                 print_tree_list.append(line)
                 print(line)
         self.tree_string = '\n'.join(print_tree_list)
+        print(f'Possible Indicators are:\n{possible_indicators}')
 
         """User Input Index"""
         if self.index is None:
@@ -199,6 +203,9 @@ class MeasurementTree:
         parent: Group = self.target.parent_group
         parent_row = self.target.parent_row
 
+        # Reset self.definition
+        self.definition = {i: self.convert_to_dict(k) for (i, k) in self.f['scan_definition'].items()}
+
         # Check control names for duplicate and rename
         control_keys = []
         for v, u in self.definition.items():
@@ -207,8 +214,11 @@ class MeasurementTree:
                 if not key in control_keys:
                     control_keys.append(key)
                 else:
+                    itera = 0
+                    key0 = key
                     while key in control_keys:
-                        key = f'{key}+'
+                        itera += 1
+                        key = f'{key0}_{itera}'
                     u['control name'] = key
                     control_keys.append(key)
             except KeyError:
