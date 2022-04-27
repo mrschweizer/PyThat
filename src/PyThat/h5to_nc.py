@@ -65,15 +65,24 @@ class MeasurementTree:
     def open_netcdf(self):
         """This function opens the expected output netcdf if it exists.\n
         Otherwise save_netcdf() is called to create such a file."""
-        try:
-            name = self.path.with_suffix('').name + str(self.index)
-            self.save_path = self.path.with_name(name).with_suffix('.nc').absolute()
-            self.array = xr.open_dataarray(self.save_path)
-            return self.array
-        except FileNotFoundError:
-            self.save_netcdf()
-            self.array = xr.open_dataarray(self.save_path)
-            return self.array
+
+        if self.index is True:
+            try:
+                self.save_path = self.path.with_suffix('.nc').absolute()
+                self.dataset = xr.open_dataset(self.save_path)
+            except FileNotFoundError:
+                self.save_netcdf_dset()
+                self.dataset = xr.open_dataset(self.save_path)
+        elif self.index is not False:
+            try:
+                name = self.path.with_suffix('').name + str(self.index)
+                self.save_path = self.path.with_name(name).with_suffix('.nc').absolute()
+                self.array = xr.open_dataarray(self.save_path)
+                return self.array
+            except FileNotFoundError:
+                self.save_netcdf()
+                self.array = xr.open_dataarray(self.save_path)
+                return self.array
 
     def construct_tree(self, data_index: tuple or None = True):
         self.definition = {i: self.convert_to_dict(k) for (i, k) in self.f['scan_definition'].items()}
@@ -206,15 +215,15 @@ class MeasurementTree:
 
         all_indicators = []
         for x in possible_indicators:
-            self.index = x
+            # self.index = x
             group, row = x
-            self.index = x
+            # self.index = x
             self.target: Group = self.new_tree[group]
 
             self.control_name = "{},{}: {}".format(group, row, self.target[row][1]['control name'])
 
             try:
-                self.data = self.target.get_data(self.index[1])
+                self.data = self.target.get_data(row)
             except KeyError:
                 print(f'Data for {x} could not be found.')
                 continue
@@ -349,8 +358,8 @@ class MeasurementTree:
                 self.array[x].attrs['units'] = y
             all_indicators.append(self.array)
 
-        self.dataset = xr.combine_by_coords(all_indicators)
-        self.save_netcdf_dset()
+            self.dataset = xr.combine_by_coords(all_indicators)
+            self.save_netcdf_dset()
 
 
     def get_scales(self, row: str, index: int) -> np.ndarray or None:
