@@ -43,7 +43,7 @@ class MeasurementTree:
                 self.save_netcdf()
         else:
             self.construct_tree()
-            if not index:
+            if index is True:
                 return
             self.save_netcdf()
 
@@ -60,7 +60,7 @@ class MeasurementTree:
     def save_netcdf_dset(self):
         self.save_path = self.path.with_suffix('.nc').absolute()
         self.dataset.to_netcdf(self.save_path)
-        print('Saved as {}'.format(self.save_path))
+        print('Saved dataset as {}'.format(self.save_path))
 
     def open_netcdf(self):
         """This function opens the expected output netcdf if it exists.\n
@@ -359,8 +359,8 @@ class MeasurementTree:
                 self.array[x].attrs['units'] = y
             all_indicators.append(self.array)
 
-            self.dataset = xr.combine_by_coords(all_indicators)
-            self.save_netcdf_dset()
+        self.dataset = xr.combine_by_coords(all_indicators)
+        self.save_netcdf_dset()
 
 
     def get_scales(self, row: str, index: int) -> np.ndarray or None:
