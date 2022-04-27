@@ -8,7 +8,7 @@ import xarray as xr
 
 
 class MeasurementTree:
-    def __init__(self, filepath, index=None, override: bool = False):
+    def __init__(self, filepath, index=True, override: bool = False):
         """
         :param filepath: r-string that points to h5 file
         :param index: optional: tuple that describes group number and group internal number
@@ -57,6 +57,11 @@ class MeasurementTree:
         self.array.to_netcdf(self.save_path)
         print('Saved as {}'.format(self.save_path))
 
+    def save_netcdf_dset(self):
+        self.save_path = self.path.with_suffix('.nc').absolute()
+        self.dataset.to_netcdf(self.save_path)
+        print('Saved as {}'.format(self.save_path))
+
     def open_netcdf(self):
         """This function opens the expected output netcdf if it exists.\n
         Otherwise save_netcdf() is called to create such a file."""
@@ -70,7 +75,7 @@ class MeasurementTree:
             self.array = xr.open_dataarray(self.save_path)
             return self.array
 
-    def construct_tree(self, data_index: tuple or None = None):
+    def construct_tree(self, data_index: tuple or None = True):
         self.definition = {i: self.convert_to_dict(k) for (i, k) in self.f['scan_definition'].items()}
         self.devices = {i: self.convert_to_dict(k) for (i, k) in self.f['devices'].items()}
         self.labbook = {i: self.convert_to_dict(k) for (i, k) in self.f['labbook'].items()}
@@ -173,7 +178,7 @@ class MeasurementTree:
                 print_tree_list.append(line)
                 print(line)
         self.tree_string = '\n'.join(print_tree_list)
-        print(f'Possible Indicators are:\n{possible_indicators}')
+
 
         """User Input Index"""
         if self.index is None:
@@ -181,155 +186,171 @@ class MeasurementTree:
             print("Please enter the Group number and the group internal number.")
             x = (0, 0)
             for i in range(3):
-                try:
-                    x = tuple([int(q) for q in input().split(',')])
+                inp = input()
+                if inp == 'All':
                     break
-                except ValueError:
-                    print("Input must be two integers, separated by a comma.")
-                    x = (0, 0)
-        elif not self.index:
-            return
-        else:
-            x = self.index
-
-        group, row = x
-        self.index = x
-        self.target: Group = self.new_tree[group]
-
-        self.control_name = "{},{}: {}".format(group, row, self.target[row][1]['control name'])
-
-        self.data = self.target.get_data(self.index[1])
-        data_shape = tuple(list(self.data.shape)[1:])
-        parent: Group = self.target.parent_group
-        parent_row = self.target.parent_row
-
-        # Reset self.definition
-        self.definition = {i: self.convert_to_dict(k) for (i, k) in self.f['scan_definition'].items()}
-
-        # Check control names for duplicate and rename
-        control_keys = []
-        for v, u in self.definition.items():
-            try:
-                key = u['control name']
-                if not key in control_keys:
-                    control_keys.append(key)
                 else:
-                    itera = 0
-                    key0 = key
-                    while key in control_keys:
-                        itera += 1
-                        key = f'{key0}_{itera}'
-                    u['control name'] = key
-                    control_keys.append(key)
-            except KeyError:
-                pass
-
-
-        """
-        Go through all parents and add control names to dimension names.
-        """
-        coords = {}
-        shape = []
-        units = []
-
-        from re import compile, search
-        find_units = compile(r' *\(.+\) *')
-
-        while parent is not None:
-            try:
-                control_name = self.definition[parent_row]["control name"]
-            except KeyError as key:
-                print(key)
-            # Get units from paranthesis in control name
-            try:
-                g = find_units.search(control_name)
-                unit = g.group()
-                units.append(unit.rstrip().lstrip()[1:-1])
-                control_name = control_name.replace(unit, "").rstrip()
-            except AttributeError:
-                if self.definition[parent_row]['function'] in ['scalar control']:
-                    units.append("")
-
-            try:
-                row_data = parent.get_data()
-                # Add shape of dimension to shape list
-                shape.append(row_data.shape[0])
-                # Add control name as key to the coords dict. Assign data to that key.
-                while control_name in coords.keys():
-                    control_name = control_name+'+'
-                coords[control_name] = row_data
-
-
-            except KeyError as err:
-                if self.definition[parent_row]['function'] == 'internal - repetitions':
-                    print('Repetitions. Generating incrementing as coords.')
-                    rep = int(self.definition[parent_row]['repetitions'])
-                    shape.append(rep)
-                    coords['repetitions'] = np.arange(rep)
-                elif self.definition[parent_row]['function'] == 'scalar control':
-                    print('Scalar control without data. Generating coords.')
-                    if isinstance(self.definition[parent_row]['start'], list):
-                        part = []
-                        for sta, sto, ste, eq in zip(self.definition[parent_row]['start'],
-                                                     self.definition[parent_row]['stop'],
-                                                     self.definition[parent_row]['steps'],
-                                                     self.definition[parent_row]['equation']):
-                            part.append(np.linspace(sta, sto, int(ste)))
-                            row_data = np.concatenate(part)
-                    else:
-                        row_data = np.linspace(self.definition[parent_row]['start'],
-                                               self.definition[parent_row]['stop'],
-                                               int(self.definition[parent_row]['steps']))
-                    while control_name in coords.keys():
-                        control_name = control_name + '+'
-                    coords[control_name] = row_data
                     try:
-                        shape.append(int(self.definition[parent_row]['steps']))
-                    except TypeError:
-                        shape.append(int(np.sum(self.definition[parent_row]['steps'])))
-            parent_row = parent.parent_row
-            parent = parent.parent_group
+                        possible_indicators = [tuple([int(q) for q in inp.split(',')])]
+                        break
+                    except ValueError:
+                        print("Input must be two integers, separated by a comma or 'All'.")
+                        x = (0, 0)
+        elif self.index is False:
+            return
+        elif self.index is True:
+            pass
+        else:
+            possible_indicators = [self.index]
+            print(f'Only one index selected: {possible_indicators[0]}')
 
-        dims = list(coords.keys())
-        units.reverse()
-        dims.reverse()
+        all_indicators = []
+        for x in possible_indicators:
+            self.index = x
+            group, row = x
+            self.index = x
+            self.target: Group = self.new_tree[group]
 
-        # iterate over metadata to innermost data to get names of all dimensions
-        for i in range(len(data_shape)):
-            coord_name = self.get_metadata(self.target[row][0])['name'][i]
-            while coord_name in coords.keys():
-                coord_name = coord_name+'+'
-            coords[coord_name] = self.get_scales(self.target[row][0], i)
-            dims.append(coord_name)
-            units.append(self.get_metadata(self.target[row][0])['unit'][i])
+            self.control_name = "{},{}: {}".format(group, row, self.target[row][1]['control name'])
 
-        dims = tuple(dims)
-        print(dims)
-        shape.reverse()
-        self.shape = tuple(shape)+data_shape
-        try:
-            self.data = np.reshape(self.data, self.shape)
-        except ValueError:
-            print('Measurement not finished?')
-            print(f'Desired shape: {self.shape}, data shape: {self.data.shape}, size: {self.data.size}')
-            flattened_length = np.prod(shape)
-            flattened_length_data = self.data.shape[0]
-            if not flattened_length_data == int(self.data.size/np.prod(data_shape)):
-                raise ValueError('The dimensions extracted from the measurement tree dont add up')
-            print(f'Number of core measurements: {flattened_length_data} of {flattened_length}')
-            flattened_shape = (flattened_length,)+data_shape
-            print(f'flattened shape: {flattened_shape}')
-            flattened_new = np.empty(flattened_shape)
-            flattened_new[...] = np.nan
-            flattened_new[0:flattened_length_data, ...] = self.data
-            self.data = np.reshape(flattened_new, self.shape)
+            try:
+                self.data = self.target.get_data(self.index[1])
+            except KeyError:
+                print(f'Data for {x} could not be found.')
+                continue
+            data_shape = tuple(list(self.data.shape)[1:])
+            parent: Group = self.target.parent_group
+            parent_row = self.target.parent_row
 
-        self.array = xr.DataArray(self.data, dims=dims, coords=coords, name=self.control_name)
+            # Reset self.definition
+            self.definition = {i: self.convert_to_dict(k) for (i, k) in self.f['scan_definition'].items()}
 
-        # Add units to Attributes
-        for x, y in zip(dims, units):
-            self.array[x].attrs['units'] = y
+            # Check control names for duplicate and rename
+            control_keys = []
+            for v, u in self.definition.items():
+                try:
+                    key = u['control name']
+                    if not key in control_keys:
+                        control_keys.append(key)
+                    else:
+                        itera = 0
+                        key0 = key
+                        while key in control_keys:
+                            itera += 1
+                            key = f'{key0}_{itera}'
+                        u['control name'] = key
+                        control_keys.append(key)
+                except KeyError:
+                    pass
 
+
+            """
+            Go through all parents and add control names to dimension names.
+            """
+            coords = {}
+            shape = []
+            units = []
+
+            from re import compile, search
+            find_units = compile(r' *\(.+\) *')
+
+            while parent is not None:
+                try:
+                    control_name = self.definition[parent_row]["control name"]
+                except KeyError as key:
+                    print(key)
+                # Get units from paranthesis in control name
+                try:
+                    g = find_units.search(control_name)
+                    unit = g.group()
+                    units.append(unit.rstrip().lstrip()[1:-1])
+                    control_name = control_name.replace(unit, "").rstrip()
+                except AttributeError:
+                    if self.definition[parent_row]['function'] in ['scalar control']:
+                        units.append("")
+
+                try:
+                    row_data = parent.get_data()
+                    # Add shape of dimension to shape list
+                    shape.append(row_data.shape[0])
+                    # Add control name as key to the coords dict. Assign data to that key.
+                    while control_name in coords.keys():
+                        control_name = control_name+'+'
+                    coords[control_name] = row_data
+
+
+                except KeyError as err:
+                    if self.definition[parent_row]['function'] == 'internal - repetitions':
+                        print('Repetitions. Generating incrementing as coords.')
+                        rep = int(self.definition[parent_row]['repetitions'])
+                        shape.append(rep)
+                        coords['repetitions'] = np.arange(rep)
+                    elif self.definition[parent_row]['function'] == 'scalar control':
+                        print('Scalar control without data. Generating coords.')
+                        if isinstance(self.definition[parent_row]['start'], list):
+                            part = []
+                            for sta, sto, ste, eq in zip(self.definition[parent_row]['start'],
+                                                         self.definition[parent_row]['stop'],
+                                                         self.definition[parent_row]['steps'],
+                                                         self.definition[parent_row]['equation']):
+                                part.append(np.linspace(sta, sto, int(ste)))
+                                row_data = np.concatenate(part)
+                        else:
+                            row_data = np.linspace(self.definition[parent_row]['start'],
+                                                   self.definition[parent_row]['stop'],
+                                                   int(self.definition[parent_row]['steps']))
+                        while control_name in coords.keys():
+                            control_name = control_name + '+'
+                        coords[control_name] = row_data
+                        try:
+                            shape.append(int(self.definition[parent_row]['steps']))
+                        except TypeError:
+                            shape.append(int(np.sum(self.definition[parent_row]['steps'])))
+                parent_row = parent.parent_row
+                parent = parent.parent_group
+
+            dims = list(coords.keys())
+            units.reverse()
+            dims.reverse()
+
+            # iterate over metadata to innermost data to get names of all dimensions
+            for i in range(len(data_shape)):
+                coord_name = self.get_metadata(self.target[row][0])['name'][i]
+                while coord_name in coords.keys():
+                    coord_name = coord_name+'+'
+                coords[coord_name] = self.get_scales(self.target[row][0], i)
+                dims.append(coord_name)
+                units.append(self.get_metadata(self.target[row][0])['unit'][i])
+
+            dims = tuple(dims)
+            shape.reverse()
+            self.shape = tuple(shape)+data_shape
+            try:
+                self.data = np.reshape(self.data, self.shape)
+            except ValueError:
+                print('Measurement not finished?')
+                print(f'Desired shape: {self.shape}, data shape: {self.data.shape}, size: {self.data.size}')
+                flattened_length = np.prod(shape)
+                flattened_length_data = self.data.shape[0]
+                if not flattened_length_data == int(self.data.size/np.prod(data_shape)):
+                    raise ValueError('The dimensions extracted from the measurement tree dont add up')
+                print(f'Number of core measurements: {flattened_length_data} of {flattened_length}')
+                flattened_shape = (flattened_length,)+data_shape
+                print(f'flattened shape: {flattened_shape}')
+                flattened_new = np.empty(flattened_shape)
+                flattened_new[...] = np.nan
+                flattened_new[0:flattened_length_data, ...] = self.data
+                self.data = np.reshape(flattened_new, self.shape)
+
+            self.array = xr.DataArray(self.data, dims=dims, coords=coords, name=self.control_name)
+
+            # Add units to Attributes
+            for x, y in zip(dims, units):
+                self.array[x].attrs['units'] = y
+            all_indicators.append(self.array)
+
+        self.dataset = xr.combine_by_coords(all_indicators)
+        self.save_netcdf_dset()
 
 
     def get_scales(self, row: str, index: int) -> np.ndarray or None:
