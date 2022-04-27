@@ -70,6 +70,7 @@ class MeasurementTree:
             try:
                 self.save_path = self.path.with_suffix('.nc').absolute()
                 self.dataset = xr.open_dataset(self.save_path)
+                print(f'Successfully loaded {self.save_path}')
             except FileNotFoundError:
                 self.save_netcdf_dset()
                 self.dataset = xr.open_dataset(self.save_path)
