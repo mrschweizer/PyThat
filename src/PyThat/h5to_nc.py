@@ -33,6 +33,8 @@ class MeasurementTree:
         self.labbook = None
         self.devices = None
         self.logs = None
+        self.dataset = None
+
         if not override:
             try:
                 self.open_netcdf()
@@ -43,9 +45,14 @@ class MeasurementTree:
                 self.save_netcdf()
         else:
             self.construct_tree()
-            if index is True:
+            if index is False:
                 return
-            self.save_netcdf()
+            if self.dataset is not None:
+                self.save_netcdf_dset()
+            elif self.array is not None:
+                self.save_netcdf()
+
+
 
     def list_hdf5(self):
         print(self.f.visit(print))
@@ -360,7 +367,7 @@ class MeasurementTree:
             all_indicators.append(self.array)
 
         self.dataset = xr.combine_by_coords(all_indicators)
-        self.save_netcdf_dset()
+
 
 
     def get_scales(self, row: str, index: int) -> np.ndarray or None:
