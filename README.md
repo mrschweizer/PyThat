@@ -38,8 +38,8 @@ data = MeasurementTree(path, override=True).dataset
 print(data)
 
 # Get variable name from printout
-interesting_name = "2,1: Acquire spectrum"
-interesting_data = data[interesting] 
+interesting_data_name = "2,1: Acquire spectrum"
+interesting_data = data[interesting_data_name] 
 
 # Select and plot data
 interesting_data.sel(dict(Frequency=slice(5, 15, None))).plot(col='Set Field')
