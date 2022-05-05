@@ -52,8 +52,6 @@ class MeasurementTree:
             elif self.array is not None:
                 self.save_netcdf()
 
-
-
     def list_hdf5(self):
         print(self.f.visit(print))
 
