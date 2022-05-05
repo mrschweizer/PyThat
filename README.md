@@ -1,3 +1,4 @@
+![logo](https://raw.githubusercontent.com/mrschweizer/PyThat/b57272fdf031b14097bd2b5f8d8cc44dfc1adf57/logo/PyThat_Logo.svg)
 # Project Description
 This is a community package which helps reading .h5 files created by ThatecOS and converting them to xarray objects and
 netcdf files. This software is not maintained by and has no affiliations to THATec Innovation GmbH.
@@ -10,6 +11,8 @@ scipy,
 h5netcdf,
 h5py,
 xarray
+
+If you are using Conda/Anaconda, you can also install via pip. However, this may result in some dependency issues, rendering PyThat inoperable.
 
 # Usage
 The package reconstructs the measurement tree and lets the user choose the row containing an indicator.
