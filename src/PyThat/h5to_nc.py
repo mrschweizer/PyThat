@@ -27,7 +27,7 @@ class MeasurementTree:
         self.data_scales = None
         self.array: xr.DataArray or None = None
         self.index: tuple or None = index
-        self.control_name = None
+        self.indicator_name = None
         self.save_path: None or pl.Path = None
         self.tree_string = None
         self.labbook = None
@@ -216,6 +216,7 @@ class MeasurementTree:
         elif self.index is True:
             pass
         else:
+            # override possible_indicators, if index is specified
             possible_indicators = [self.index]
             print(f'Only one index selected: {possible_indicators[0]}')
 
@@ -226,7 +227,7 @@ class MeasurementTree:
             # self.index = x
             self.target: Group = self.new_tree[group]
 
-            self.control_name = "{},{}: {}".format(group, row, self.target[row][1]['control name'])
+            self.indicator_name = f"{group},{row}: {self.target[row][1]['control name']}"
 
             try:
                 self.data = self.target.get_data(row)
@@ -292,8 +293,6 @@ class MeasurementTree:
                     while control_name in coords.keys():
                         control_name = control_name+'+'
                     coords[control_name] = row_data
-
-
                 except KeyError as err:
                     if self.definition[parent_row]['function'] == 'internal - repetitions':
                         print('Repetitions. Generating incrementing as coords.')
@@ -357,7 +356,7 @@ class MeasurementTree:
                 flattened_new[0:flattened_length_data, ...] = self.data
                 self.data = np.reshape(flattened_new, self.shape)
 
-            self.array = xr.DataArray(self.data, dims=dims, coords=coords, name=self.control_name)
+            self.array = xr.DataArray(self.data, dims=dims, coords=coords, name=self.indicator_name)
 
             # Add units to Attributes
             for x, y in zip(dims, units):
