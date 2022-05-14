@@ -227,7 +227,6 @@ class MeasurementTree:
             # self.index = x
             self.target: Group = self.new_tree[group]
 
-            self.indicator_name = f"{group},{row}: {self.target[row][1]['control name']}"
 
             try:
                 self.data = self.target.get_data(row)
@@ -241,23 +240,36 @@ class MeasurementTree:
             # Reset self.definition
             self.definition = {i: self.convert_to_dict(k) for (i, k) in self.f['scan_definition'].items()}
 
-            # Check control names for duplicate and rename
+            # Check control names in self.definition for duplicate and rename
+            # control_keys: list of already encountered keys
             control_keys = []
+            key_control_name = None
             for v, u in self.definition.items():
                 try:
-                    key = u['control name']
-                    if not key in control_keys:
-                        control_keys.append(key)
+                    key_control_name = u['control name']
+                except KeyError:
+                    if self.definition[parent_row]['function'] == 'internal - repetitions':
+                        key_control_name = 'repetitions'
+                # if key_control_name was not yet encountered, add to list of encountered keys
+                # only if control key is either control name or repetitions
+                if key_control_name is not None:
+                    if key_control_name not in control_keys:
+                        control_keys.append(key_control_name)
                     else:
                         itera = 0
-                        key0 = key
-                        while key in control_keys:
+                        key0 = key_control_name
+                        while key_control_name in control_keys:
                             itera += 1
-                            key = f'{key0}_{itera}'
-                        u['control name'] = key
-                        control_keys.append(key)
-                except KeyError:
-                    pass
+                            key_control_name = f'{key0}_{itera}'
+
+                        u['control name'] = key_control_name
+                        control_keys.append(key_control_name)
+
+
+            # self.indicator_name = f"{group},{row}: {self.target[row][1]['control name']}"
+
+            global_row = self.target[row][0]
+            self.indicator_name = self.definition[global_row]['control name']
 
 
             """
@@ -268,7 +280,7 @@ class MeasurementTree:
             units = []
 
             from re import compile, search
-            find_units = compile(r' *\(.+\) *')
+            find_units = compile(r' *\((.+)\) *')
 
             while parent is not None:
                 try:
@@ -279,13 +291,16 @@ class MeasurementTree:
                 # Get units from paranthesis in control name
                 try:
                     g = find_units.search(control_name)
-                    unit = g.group()
+                    unit = g.group(1)
+                    rem = g.group(0)
                     units.append(unit.rstrip().lstrip()[1:-1])
-                    control_name = control_name.replace(unit, "").rstrip()
+                    control_name = control_name.replace(rem, "").rstrip()
                 except AttributeError:
                     if self.definition[parent_row]['function'] in ['scalar control']:
                         units.append("")
 
+
+                row_data = None
                 try:
                     row_data = parent.get_data()
                     # Add shape of dimension to shape list
@@ -317,15 +332,28 @@ class MeasurementTree:
                             shape.append(int(self.definition[parent_row]['steps']))
                         except TypeError:
                             shape.append(int(np.sum(self.definition[parent_row]['steps'])))
-                while control_name in coords.keys():
-                    control_name = control_name + '+'
-                coords[control_name] = row_data
+                if row_data is not None:
+                    itera = 1
+                    control_name0 = control_name
+                    while control_name in coords.keys():
+                        control_name = f'{control_name0}_{itera}'
+                        itera += 1
+                    coords[control_name] = row_data
                 parent_row = parent.parent_row
                 parent = parent.parent_group
 
             dims = list(coords.keys())
             units.reverse()
             dims.reverse()
+
+            try:
+                g = find_units.search(self.indicator_name)
+                unit = g.group(1)
+                rem = g.group(0)
+                indicator_unit = unit
+                self.indicator_name = self.indicator_name.replace(rem, "").rstrip()
+            except AttributeError:
+                indicator_unit = ''
 
             # iterate over metadata to innermost data to get names of all dimensions
             for i in range(len(data_shape)):
@@ -357,10 +385,12 @@ class MeasurementTree:
                 self.data = np.reshape(flattened_new, self.shape)
 
             self.array = xr.DataArray(self.data, dims=dims, coords=coords, name=self.indicator_name)
-
             # Add units to Attributes
             for x, y in zip(dims, units):
                 self.array[x].attrs['units'] = y
+            print(f'Unit: {indicator_unit}')
+            self.array.attrs['units'] = indicator_unit
+            print(self.array)
             all_indicators.append(self.array)
 
         self.dataset = xr.combine_by_coords(all_indicators)
