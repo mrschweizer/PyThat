@@ -275,6 +275,7 @@ class MeasurementTree:
                     control_name = self.definition[parent_row]["control name"]
                 except KeyError as key:
                     print(key)
+
                 # Get units from paranthesis in control name
                 try:
                     g = find_units.search(control_name)
@@ -290,15 +291,14 @@ class MeasurementTree:
                     # Add shape of dimension to shape list
                     shape.append(row_data.shape[0])
                     # Add control name as key to the coords dict. Assign data to that key.
-                    while control_name in coords.keys():
-                        control_name = control_name+'+'
-                    coords[control_name] = row_data
                 except KeyError as err:
                     if self.definition[parent_row]['function'] == 'internal - repetitions':
                         print('Repetitions. Generating incrementing as coords.')
                         rep = int(self.definition[parent_row]['repetitions'])
                         shape.append(rep)
-                        coords['repetitions'] = np.arange(rep)
+                        row_data = np.arange(rep)
+                        control_name = 'repetitions'
+                        # coords[control_name] = row_data
                     elif self.definition[parent_row]['function'] == 'scalar control':
                         print('Scalar control without data. Generating coords.')
                         if isinstance(self.definition[parent_row]['start'], list):
@@ -313,13 +313,13 @@ class MeasurementTree:
                             row_data = np.linspace(self.definition[parent_row]['start'],
                                                    self.definition[parent_row]['stop'],
                                                    int(self.definition[parent_row]['steps']))
-                        while control_name in coords.keys():
-                            control_name = control_name + '+'
-                        coords[control_name] = row_data
                         try:
                             shape.append(int(self.definition[parent_row]['steps']))
                         except TypeError:
                             shape.append(int(np.sum(self.definition[parent_row]['steps'])))
+                while control_name in coords.keys():
+                    control_name = control_name + '+'
+                coords[control_name] = row_data
                 parent_row = parent.parent_row
                 parent = parent.parent_group
 
