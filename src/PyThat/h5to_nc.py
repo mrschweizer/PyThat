@@ -286,7 +286,8 @@ class MeasurementTree:
                 try:
                     control_name = self.definition[parent_row]["control name"]
                 except KeyError as key:
-                    print(key)
+                    pass
+
 
                 # Get units from paranthesis in control name
                 try:
@@ -356,13 +357,26 @@ class MeasurementTree:
                 indicator_unit = ''
 
             # iterate over metadata to innermost data to get names of all dimensions
-            for i in range(len(data_shape)):
-                coord_name = self.get_metadata(self.target[row][0])['name'][i]
-                while coord_name in coords.keys():
-                    coord_name = coord_name+'+'
-                coords[coord_name] = self.get_scales(self.target[row][0], i)
-                dims.append(coord_name)
-                units.append(self.get_metadata(self.target[row][0])['unit'][i])
+            metadata = self.get_metadata(self.target[row][0])
+            if metadata is not None:
+                for i in range(len(data_shape)):
+                    print(f'In: {self.target[row][0]}')
+                    coord_name = metadata['name'][i]
+                    scales = self.get_scales(self.target[row][0], i)
+                    while coord_name in coords.keys():
+                        coord_name = coord_name+'+'
+                    coords[coord_name] = scales
+                    dims.append(coord_name)
+                    units.append(metadata['unit'][i])
+            else:
+                print('Its None')
+                coord_name = 'some_dimension'
+                for i, dat_shape in enumerate(data_shape):
+                    while coord_name in coords.keys():
+                        coord_name = coord_name + '+'
+                    coords[coord_name] = np.arange(dat_shape)
+                    dims.append(coord_name)
+                    units.append('')
 
             dims = tuple(dims)
             shape.reverse()
@@ -384,13 +398,14 @@ class MeasurementTree:
                 flattened_new[0:flattened_length_data, ...] = self.data
                 self.data = np.reshape(flattened_new, self.shape)
 
+            print(f'dims: {dims}')
+            print(f'coords: {coords}')
+            print(f'units: {units}')
             self.array = xr.DataArray(self.data, dims=dims, coords=coords, name=self.indicator_name)
             # Add units to Attributes
             for x, y in zip(dims, units):
                 self.array[x].attrs['units'] = y
-            print(f'Unit: {indicator_unit}')
             self.array.attrs['units'] = indicator_unit
-            print(self.array)
             all_indicators.append(self.array)
 
         self.dataset = xr.combine_by_coords(all_indicators)
@@ -416,23 +431,26 @@ class MeasurementTree:
         return self.f['measurement/' + row + '/data']
 
     def get_metadata(self, row: str, truncate: bool = False) -> np.ndarray or None:
-        obj = self.f['measurement/' + row + '/metadata'].asstr()[:, :]
-        metadata = {}
-        for x in obj:
-            metadata[x[0]] = []
-        for x in obj:
-            test_string = x[1][1:-1] if truncate else x[1]
-            try:
-                z = float(test_string)
-            except ValueError:
-                if test_string == 'false':
-                    z = False
-                elif test_string == 'true':
-                    z = True
-                else:
-                    z = test_string
-            metadata[x[0]].append(z)
-        return metadata
+        try:
+            obj = self.f['measurement/' + row + '/metadata'].asstr()[:, :]
+            metadata = {}
+            for x in obj:
+                metadata[x[0]] = []
+            for x in obj:
+                test_string = x[1][1:-1] if truncate else x[1]
+                try:
+                    z = float(test_string)
+                except ValueError:
+                    if test_string == 'false':
+                        z = False
+                    elif test_string == 'true':
+                        z = True
+                    else:
+                        z = test_string
+                metadata[x[0]].append(z)
+            return metadata
+        except KeyError:
+            return None
 
     @staticmethod
     def check_for_sp_char(text):
