@@ -34,6 +34,7 @@ class MeasurementTree:
         self.devices = None
         self.logs = None
         self.dataset = None
+        self.metadata = {}
 
         if not override:
             try:
@@ -220,6 +221,58 @@ class MeasurementTree:
             possible_indicators = [self.index]
             print(f'Only one index selected: {possible_indicators[0]}')
 
+
+        # create array with all core-data names
+        # create self.metadata
+        core_data_names = []
+        for (i, k) in self.f['scan_definition'].items():
+            meta_entry = self.get_metadata(i)
+            if meta_entry is not None:
+                try:
+                    name_entry = meta_entry['name']
+                    if isinstance(name_entry, list):
+                        name = [self.avoid_duplicate(i, core_data_names) for i in name_entry]
+                        meta_entry['name'] = name
+                        core_data_names = core_data_names + name
+                    elif isinstance(name_entry, str):
+                        name = self.avoid_duplicate(name_entry, core_data_names)
+                        core_data_names.append(name)
+                        meta_entry['name'] = name
+                except KeyError:
+                    pass
+            self.metadata[i] = meta_entry
+        print(f'Core data names: {core_data_names}')
+
+        # print()
+        # print('Core Data Metadata:')
+        # for i, j in self.metadata.items():
+        #     if j is not None:
+        #         print(i)
+        #         for k in j.values():
+        #             print(k)
+
+        # Check control names in self.definition for duplicate and rename
+        # control_keys: list of already encountered keys
+        control_keys = core_data_names
+        for v, u in self.definition.items():
+            key_control_name = None
+            try:
+                key_control_name = u['control name']
+            except KeyError:
+                if u['function'] == 'internal - repetitions':
+                    key_control_name = 'repetitions'
+            # if key_control_name was not yet encountered, add to list of encountered keys
+            # only if control key is either control name or repetitions
+            if key_control_name is not None:
+                key_control_name, unit = self.get_units(key_control_name)
+                if key_control_name in control_keys:
+                    key_control_name = self.avoid_duplicate(key_control_name, control_keys)
+                u['control name'] = key_control_name
+                control_keys.append(key_control_name)
+                u['units'] = unit
+
+        # print([u['units'] for u in self.definition.values() if 'units' in u])
+
         all_indicators = []
         for x in possible_indicators:
             # self.index = x
@@ -237,40 +290,13 @@ class MeasurementTree:
             parent: Group = self.target.parent_group
             parent_row = self.target.parent_row
 
-            # Reset self.definition
-            self.definition = {i: self.convert_to_dict(k) for (i, k) in self.f['scan_definition'].items()}
-
-            # Check control names in self.definition for duplicate and rename
-            # control_keys: list of already encountered keys
-            control_keys = []
-            key_control_name = None
-            for v, u in self.definition.items():
-                try:
-                    key_control_name = u['control name']
-                except KeyError:
-                    if self.definition[parent_row]['function'] == 'internal - repetitions':
-                        key_control_name = 'repetitions'
-                # if key_control_name was not yet encountered, add to list of encountered keys
-                # only if control key is either control name or repetitions
-                if key_control_name is not None:
-                    if key_control_name not in control_keys:
-                        control_keys.append(key_control_name)
-                    else:
-                        itera = 0
-                        key0 = key_control_name
-                        while key_control_name in control_keys:
-                            itera += 1
-                            key_control_name = f'{key0}_{itera}'
-
-                        u['control name'] = key_control_name
-                        control_keys.append(key_control_name)
-
-
-            # self.indicator_name = f"{group},{row}: {self.target[row][1]['control name']}"
-
             global_row = self.target[row][0]
-            self.indicator_name = self.definition[global_row]['control name']
 
+            self.indicator_name = self.definition[global_row]['control name']
+            print()
+            print("Building xarray object for:")
+            print(f"{self.indicator_name}, {global_row}")
+            print("________________________________________________________")
 
             """
             Go through all parents and add control names to dimension names.
@@ -279,27 +305,21 @@ class MeasurementTree:
             shape = []
             units = []
 
-            from re import compile, search
-            find_units = compile(r' *\((.+)\) *')
-
             while parent is not None:
                 try:
                     control_name = self.definition[parent_row]["control name"]
                 except KeyError as key:
                     pass
 
+                try:
+                    unit = self.definition[parent_row]["units"]
+                except KeyError:
+                    print(f'No Unit found for {control_name}, {parent_row}')
+                """check if unit has already been stored"""
 
                 # Get units from paranthesis in control name
-                try:
-                    g = find_units.search(control_name)
-                    unit = g.group(1)
-                    rem = g.group(0)
-                    units.append(unit.rstrip().lstrip()[1:-1])
-                    control_name = control_name.replace(rem, "").rstrip()
-                except AttributeError:
-                    if self.definition[parent_row]['function'] in ['scalar control']:
-                        units.append("")
-
+                control_name, _ = self.get_units(control_name)
+                # if self.definition[parent_row]['function'] in ['scalar control']:
 
                 row_data = None
                 try:
@@ -313,10 +333,8 @@ class MeasurementTree:
                         rep = int(self.definition[parent_row]['repetitions'])
                         shape.append(rep)
                         row_data = np.arange(rep)
-                        control_name = 'repetitions'
-                        # coords[control_name] = row_data
                     elif self.definition[parent_row]['function'] == 'scalar control':
-                        print('Scalar control without data. Generating coords.')
+                        print(f'Scalar control {control_name} without data. Generating coords.')
                         if isinstance(self.definition[parent_row]['start'], list):
                             part = []
                             for sta, sto, ste, eq in zip(self.definition[parent_row]['start'],
@@ -334,12 +352,8 @@ class MeasurementTree:
                         except TypeError:
                             shape.append(int(np.sum(self.definition[parent_row]['steps'])))
                 if row_data is not None:
-                    itera = 1
-                    control_name0 = control_name
-                    while control_name in coords.keys():
-                        control_name = f'{control_name0}_{itera}'
-                        itera += 1
                     coords[control_name] = row_data
+                    units.append(unit)
                 parent_row = parent.parent_row
                 parent = parent.parent_group
 
@@ -347,33 +361,25 @@ class MeasurementTree:
             units.reverse()
             dims.reverse()
 
-            try:
-                g = find_units.search(self.indicator_name)
-                unit = g.group(1)
-                rem = g.group(0)
-                indicator_unit = unit
-                self.indicator_name = self.indicator_name.replace(rem, "").rstrip()
-            except AttributeError:
-                indicator_unit = ''
+            self.indicator_name, indicator_unit = self.get_units(self.indicator_name)
+
 
             # iterate over metadata to innermost data to get names of all dimensions
-            metadata = self.get_metadata(self.target[row][0])
+            metadata = self.metadata[self.target[row][0]]
             if metadata is not None:
+                print(f'Get Metadata for: {self.target[row][0]}')
                 for i in range(len(data_shape)):
-                    print(f'In: {self.target[row][0]}')
                     coord_name = metadata['name'][i]
                     scales = self.get_scales(self.target[row][0], i)
-                    while coord_name in coords.keys():
-                        coord_name = coord_name+'+'
                     coords[coord_name] = scales
                     dims.append(coord_name)
-                    units.append(metadata['unit'][i])
+                    unit = metadata['unit'][i]
+                    units.append(unit)
             else:
-                print('Its None')
+                print(f'No Metadata found for {self.indicator_name}')
                 coord_name = 'some_dimension'
                 for i, dat_shape in enumerate(data_shape):
-                    while coord_name in coords.keys():
-                        coord_name = coord_name + '+'
+                    coord_name = self.avoid_duplicate(coord_name, coords.keys())
                     coords[coord_name] = np.arange(dat_shape)
                     dims.append(coord_name)
                     units.append('')
@@ -398,9 +404,8 @@ class MeasurementTree:
                 flattened_new[0:flattened_length_data, ...] = self.data
                 self.data = np.reshape(flattened_new, self.shape)
 
-            print(f'dims: {dims}')
-            print(f'coords: {coords}')
-            print(f'units: {units}')
+
+            print()
             self.array = xr.DataArray(self.data, dims=dims, coords=coords, name=self.indicator_name)
             # Add units to Attributes
             for x, y in zip(dims, units):
@@ -410,7 +415,27 @@ class MeasurementTree:
 
         self.dataset = xr.combine_by_coords(all_indicators)
 
+    @staticmethod
+    def avoid_duplicate(init_name, lis):
+        itera = 1
+        init_name0 = init_name
+        while init_name in lis:
+            init_name = f'{init_name0}_{itera}'
+            itera += 1
+        return init_name
 
+    @staticmethod
+    def get_units(control_name):
+        from re import compile, search
+        find_units = compile(r' *\((.+)\) *')
+        try:
+            g = find_units.search(control_name)
+            unit = g.group(1)
+            rem = g.group(0)
+            control_name = control_name.replace(rem, "").rstrip()
+            return control_name, unit
+        except AttributeError:
+            return control_name, ''
 
     def get_scales(self, row: str, index: int) -> np.ndarray or None:
         scale_shape = (self.data.shape[0], (int(self.definition[row]['dimensions'])+1), 2)
@@ -421,7 +446,11 @@ class MeasurementTree:
             scales = np.linspace(scale_specs[0], stop, data_shape)
             return scales
         except KeyError:
+            print('No scales found.')
             return None
+        except ValueError:
+            print('Scales do not fit the required dimensions.')
+            return np.arange(data_shape)
 
     def get_data(self, row: str):
         """
