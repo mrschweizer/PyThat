@@ -171,10 +171,10 @@ class MeasurementTree:
                               'start', 'stop',
                               'steps',
                               'waiting period (ms)',
-                              'repetitions']
+                              'repetitions',
+                              'value']
                 values = []
                 printout = f'({group}, {row}) "{i}": '
-
                 for name in properties:
                     try:
                         values.append(k[name])
