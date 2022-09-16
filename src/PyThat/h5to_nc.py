@@ -44,29 +44,35 @@ class MeasurementTree:
                 if not index:
                     return
                 self.save_netcdf()
+            except FileNotFoundError:
+                self.construct_tree()
+                if not index:
+                    return
+                self.save_netcdf()
         else:
             self.construct_tree()
             if index is False:
                 return
-            if self.dataset is not None:
-                self.save_netcdf_dset()
-            elif self.array is not None:
-                self.save_netcdf()
+            self.save_netcdf()
 
     def list_hdf5(self):
         print(self.f.visit(print))
 
     def save_netcdf(self):
         self.array: xr.DataArray
-        name = self.path.with_suffix('').name+str(self.index)
-        self.save_path = self.path.with_name(name).with_suffix('.nc').absolute()
-        self.array.to_netcdf(self.save_path)
-        print('Saved as {}'.format(self.save_path))
+        if self.index is not True:
+            name = self.path.with_suffix('').name + str(self.index)
+            print(f'Index: {self.index}')
+            self.save_path = self.path.with_name(name).with_suffix('.nc').absolute()
+        else:
+            self.save_path = self.path.with_suffix('.nc').absolute()
+        if self.dataset is not None:
+            self.dataset.to_netcdf(self.save_path)
+            print('Saved dataset as {}'.format(self.save_path))
+        elif self.array is not None:
+            self.array.to_netcdf(self.save_path)
+            print('Saved as {}'.format(self.save_path))
 
-    def save_netcdf_dset(self):
-        self.save_path = self.path.with_suffix('.nc').absolute()
-        self.dataset.to_netcdf(self.save_path)
-        print('Saved dataset as {}'.format(self.save_path))
 
     def open_netcdf(self):
         """This function opens the expected output netcdf if it exists.\n
@@ -78,17 +84,22 @@ class MeasurementTree:
                 self.dataset = xr.open_dataset(self.save_path)
                 print(f'Successfully loaded {self.save_path}')
             except FileNotFoundError:
-                self.save_netcdf_dset()
+                print('File not found')
+                self.save_netcdf()
                 self.dataset = xr.open_dataset(self.save_path)
+        elif self.index is None:
+            raise FileNotFoundError
         elif self.index is not False:
             try:
                 name = self.path.with_suffix('').name + str(self.index)
                 self.save_path = self.path.with_name(name).with_suffix('.nc').absolute()
                 self.array = xr.open_dataarray(self.save_path)
+                self.dataset = xr.open_dataarray(self.save_path)
                 return self.array
             except FileNotFoundError:
                 self.save_netcdf()
                 self.array = xr.open_dataarray(self.save_path)
+                self.dataset = xr.open_dataarray(self.save_path)
                 return self.array
 
     def construct_tree(self):
