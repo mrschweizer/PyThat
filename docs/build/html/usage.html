@@ -1,0 +1,216 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Usage &#8212; PyThat 0.0.33 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Reference" href="api_reference.html" />
+    <link rel="prev" title="Welcome to PyThat’s documentation!" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>To use PyThat, first install it using pip (via terminal):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pip install PyThat
+</pre></div>
+</div>
+<p>Please note, that PyThat is not yet available via conda/Anaconda.</p>
+</section>
+<section id="basics-and-scope">
+<h2>Basics and Scope<a class="headerlink" href="#basics-and-scope" title="Permalink to this headline">¶</a></h2>
+<p>The package reconstructs the measurement tree and lets the user choose the row containing an indicator. It then uses the metadata from the measurement tree to construct an xarray object with n+m dimensions, where n is the dimension of the indicator in the specified row and m the number of indents/loops.</p>
+<p>Since xarray is built around labeled arrays, it also reconstructs the dimension label (dims) and label coordinate (coords) attributes of the xarray objects. The scope of PyThat is the conversion into the xarray format. For use of xarray see the well maintained <a class="reference external" href="https://docs.xarray.dev/en/stable/user-guide/index.html">xarray documentation</a>.</p>
+<p>After starting at version 0.27 all data is read for all valid indicators and combined to a dataset. The old version with indexing should still work, however.</p>
+</section>
+</section>
+<section id="examples">
+<h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
+<section id="load-data">
+<h2>Load Data<a class="headerlink" href="#load-data" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">PyThat</span> <span class="kn">import</span> <span class="n">MeasurementTree</span>
+<span class="n">path</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;C:\some_folder\measurement_file.h5&#39;</span>
+<span class="n">mt</span> <span class="o">=</span> <span class="n">MeasurementTree</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The result will look like this:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Number of groups: 2</span>
+<span class="gp gp-VirtualEnv">(0, 0)</span> <span class="go">&quot;row_00&quot;: [&#39;scalar control&#39;, &#39;Anritsu ShockLine MS46xxx VNA&#39;, &#39;Number of points&#39;, 1001.0, 2147483647.0, 1.0]</span>
+<span class="gp gp-VirtualEnv">(0, 1)</span> <span class="go">&quot;row_01&quot;: [&#39;scalar control&#39;, &#39;Anritsu ShockLine MS46xxx VNA&#39;, &#39;Start frequency (MHz)&#39;, 5650.0, 43499.999998, 1.0]</span>
+<span class="gp gp-VirtualEnv">(0, 2)</span> <span class="go">&quot;row_02&quot;: [&#39;scalar control&#39;, &#39;Anritsu ShockLine MS46xxx VNA&#39;, &#39;Stop frequency (MHz)&#39;, 6350.0, 6350.0, 1.0]</span>
+<span class="gp gp-VirtualEnv">(0, 3)</span> <span class="go">&quot;row_03&quot;: [&#39;scalar control&#39;, &#39;Anritsu ShockLine MS46xxx VNA&#39;, &#39;Averages&#39;, 10.0, 4294967295.0, 1.0]</span>
+<span class="gp gp-VirtualEnv">(0, 4)</span> <span class="go">&quot;row_04&quot;: [&#39;boolean control&#39;, &#39;Bruker_B-EC1_Simple&#39;, &#39;DC Output&#39;, &#39;TRUE&#39;]</span>
+<span class="gp gp-VirtualEnv">(0, 5)</span> <span class="go">&quot;row_05&quot;: [&#39;scalar control&#39;, &#39;Bruker_B-EC1_Simple&#39;, &#39;Set Magnetic Field (mT)&#39;, 130.0, 155.0, 21.0]</span>
+<span class="gp gp-VirtualEnv">(1, 0)</span> <span class="go">&quot;row_06&quot;: [&#39;boolean control&#39;, &#39;Anritsu ShockLine MS46xxx VNA&#39;, &#39;Trigger spectrum&#39;, &#39;TRUE&#39;]</span>
+<span class="go">  (1, 1) &quot;row_07&quot;: [&#39;indicator&#39;, &#39;Anritsu ShockLine MS46xxx VNA&#39;, &#39;Im_S11&#39;] (21, 1001)</span>
+<span class="go">  (1, 2) &quot;row_08&quot;: [&#39;indicator&#39;, &#39;Anritsu ShockLine MS46xxx VNA&#39;, &#39;Im_S12&#39;] (21, 1001)</span>
+<span class="go">  (1, 3) &quot;row_09&quot;: [&#39;indicator&#39;, &#39;Anritsu ShockLine MS46xxx VNA&#39;, &#39;Im_S21&#39;] (21, 1001)</span>
+<span class="go">  (1, 4) &quot;row_10&quot;: [&#39;indicator&#39;, &#39;Anritsu ShockLine MS46xxx VNA&#39;, &#39;Im_S22&#39;] (21, 1001)</span>
+<span class="go">  (1, 5) &quot;row_11&quot;: [&#39;indicator&#39;, &#39;Anritsu ShockLine MS46xxx VNA&#39;, &#39;Re_S11&#39;] (21, 1001)</span>
+<span class="go">  (1, 6) &quot;row_12&quot;: [&#39;indicator&#39;, &#39;Anritsu ShockLine MS46xxx VNA&#39;, &#39;Re_S12&#39;] (21, 1001)</span>
+<span class="go">  (1, 7) &quot;row_13&quot;: [&#39;indicator&#39;, &#39;Anritsu ShockLine MS46xxx VNA&#39;, &#39;Re_S21&#39;] (21, 1001)</span>
+<span class="go">  (1, 8) &quot;row_14&quot;: [&#39;indicator&#39;, &#39;Anritsu ShockLine MS46xxx VNA&#39;, &#39;Re_S22&#39;] (21, 1001)</span>
+<span class="go">Core data names: [&#39;Frequency&#39;, &#39;Amplitude&#39;, &#39;Frequency_1&#39;, &#39;Amplitude_1&#39;, &#39;Frequency_2&#39;, &#39;Amplitude_2&#39;, &#39;Frequency_3&#39;, &#39;Amplitude_3&#39;, &#39;Frequency_4&#39;, &#39;Amplitude_4&#39;, &#39;Frequency_5&#39;, &#39;Amplitude_5&#39;, &#39;Frequency_6&#39;, &#39;Amplitude_6&#39;, &#39;Frequency_7&#39;, &#39;Amplitude_7&#39;]</span>
+</pre></div>
+</div>
+<p>This is the representation of the scan definition. It shows all rows, their functions and dimensions.
+“Core data names” is a list of variables inside the created xarray.Dataset.</p>
+<p>Followed by a few blocks like this:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Building xarray object for:</span>
+<span class="go">Im_S11, row_07</span>
+<span class="go">________________________________________________________</span>
+<span class="go">Scalar control Set Magnetic Field without data. Generating coords.</span>
+<span class="go">Get Metadata for: row_07</span>
+</pre></div>
+</div>
+<p>For each indicator row, a block like this will be printed. In the case of most sweeped controls,
+no coordinate array is available. This means, this array must first be created, which is denoted here.</p>
+<p>And finally:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Saved as C:\Users\Matthias\Desktop\PyThat Example\VNA_2_to_1True.nc</span>
+</pre></div>
+</div>
+<p>The process has finished and the file has been saved to a .nc file. If you run the same script again, this file will be
+loaded instead of doing the whole process again.</p>
+</section>
+<section id="review-data-structure">
+<h2>Review Data Structure<a class="headerlink" href="#review-data-structure" title="Permalink to this headline">¶</a></h2>
+<p>Once, the dataset has been created, you can access it via</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">mt</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+<span class="go">    &lt;xarray.Dataset&gt;</span>
+<span class="go">    Dimensions:             (Set Magnetic Field: 21, Frequency: 1001,</span>
+<span class="go">                             Frequency_1: 1001, Frequency_2: 1001,</span>
+<span class="go">                             Frequency_3: 1001, Frequency_4: 1001,</span>
+<span class="go">                             Frequency_5: 1001, Frequency_6: 1001, Frequency_7: 1001)</span>
+<span class="go">    Coordinates:</span>
+<span class="go">      * Set Magnetic Field  (Set Magnetic Field) float64 130.0 131.2 ... 153.8 155.0</span>
+<span class="go">      * Frequency           (Frequency) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
+<span class="go">      * Frequency_1         (Frequency_1) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
+<span class="go">      * Frequency_2         (Frequency_2) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
+<span class="go">      * Frequency_3         (Frequency_3) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
+<span class="go">      * Frequency_4         (Frequency_4) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
+<span class="go">      * Frequency_5         (Frequency_5) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
+<span class="go">      * Frequency_6         (Frequency_6) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
+<span class="go">      * Frequency_7         (Frequency_7) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
+<span class="go">    Data variables:</span>
+<span class="go">        Im_S11              (Set Magnetic Field, Frequency) float64 0.4498 ... 0....</span>
+<span class="go">        Im_S12              (Set Magnetic Field, Frequency_1) float64 0.001696 .....</span>
+<span class="go">        Im_S21              (Set Magnetic Field, Frequency_2) float64 0.001506 .....</span>
+<span class="go">        Im_S22              (Set Magnetic Field, Frequency_3) float64 -0.1521 ......</span>
+<span class="go">        Re_S11              (Set Magnetic Field, Frequency_4) float64 -0.057 ... ...</span>
+<span class="go">        Re_S12              (Set Magnetic Field, Frequency_5) float64 0.002668 .....</span>
+<span class="go">        Re_S21              (Set Magnetic Field, Frequency_6) float64 0.002619 .....</span>
+<span class="go">        Re_S22              (Set Magnetic Field, Frequency_7) float64 -0.5101 ......</span>
+</pre></div>
+</div>
+<p>Indicator rows have been translated to data variables (e.g. Im_S11) and controls to coordinates (e.g. “Set Magnetic Field”).
+Since Im_S11 etc. are 1D data, they have also been assigned a frequency coordinate. The coordinate names have been altered,
+so that they are unique, in order to prevent different devices/functions having the same coordinate name.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">PyThat</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#basics-and-scope">Basics and Scope</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#load-data">Load Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#review-data-structure">Review Data Structure</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to PyThat’s documentation!</a></li>
+      <li>Next: <a href="api_reference.html" title="next chapter">API Reference</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Matthias R. Schweizer.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.3.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/usage.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

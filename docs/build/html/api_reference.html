@@ -1,0 +1,303 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>API Reference &#8212; PyThat 0.0.33 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Usage" href="usage.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="PyThat.MeasurementTree">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">PyThat.</span></span><span class="sig-name descname"><span class="pre">MeasurementTree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">override</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PyThat.MeasurementTree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of random ingredients as strings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> – Path to .h5 measurement file. Can be relative or absolute path.</p></li>
+<li><p><strong>override</strong> – This will force PyThat to reconstruct the measurement tree again, even if there is already a netcdf
+file (.nc) from a previous run. Setting this to True is the only way to ensure that most attributes
+are available during a run.</p></li>
+<li><p><strong>index</strong> (<em>bool</em><em>, </em><em>tuple</em><em> (</em><em>i</em><em>, </em><em>j</em><em>) or </em><em>None</em>) – <p>Default True: All of the measurement data being loaded into a xarray Dataset.</p>
+<p>Tuple: DataArray of that particular group.</p>
+<p>None: User input after the measurement tree has been printed.</p>
+<p>False: Exit after measurement tree has been printed.</p>
+</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="PyThat.MeasurementTree.dataset">
+<span class="sig-name descname"><span class="pre">dataset</span></span><a class="headerlink" href="#PyThat.MeasurementTree.dataset" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>xarray.Dataset</p>
+</dd>
+</dl>
+<p>If index is True, all available data will be included here.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="PyThat.MeasurementTree.array">
+<span class="sig-name descname"><span class="pre">array</span></span><a class="headerlink" href="#PyThat.MeasurementTree.array" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>xarray.DataArray</p>
+</dd>
+</dl>
+<p>If index is None or Tuple, the data from the selected row will be included here.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="PyThat.MeasurementTree.path">
+<span class="sig-name descname"><span class="pre">path</span></span><a class="headerlink" href="#PyThat.MeasurementTree.path" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>pathlib.Path</p>
+</dd>
+</dl>
+<p>Absolute path to h5 file</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="PyThat.MeasurementTree.filepath">
+<span class="sig-name descname"><span class="pre">filepath</span></span><a class="headerlink" href="#PyThat.MeasurementTree.filepath" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+<p>String representation of the filepath as entered by user.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="PyThat.MeasurementTree.index">
+<span class="sig-name descname"><span class="pre">index</span></span><a class="headerlink" href="#PyThat.MeasurementTree.index" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Bool, tuple or None</p>
+</dd>
+</dl>
+<p>Index of data which will be read during construct_tree. Will iterate through all relevant rows if True.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="PyThat.MeasurementTree.f">
+<span class="sig-name descname"><span class="pre">f</span></span><a class="headerlink" href="#PyThat.MeasurementTree.f" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>h5py.File</p>
+</dd>
+</dl>
+<p>File handler of the .h5 file.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="PyThat.MeasurementTree.save_path">
+<span class="sig-name descname"><span class="pre">save_path</span></span><a class="headerlink" href="#PyThat.MeasurementTree.save_path" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>None or pathlib.Path</p>
+</dd>
+</dl>
+<p>Path to the generated netcdf (.nc) file.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="PyThat.MeasurementTree.definition">
+<span class="sig-name descname"><span class="pre">definition</span></span><a class="headerlink" href="#PyThat.MeasurementTree.definition" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<p>Scan definition/measurement tree of the measurement as saved by THATec without any processing.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="PyThat.MeasurementTree.tree_string">
+<span class="sig-name descname"><span class="pre">tree_string</span></span><a class="headerlink" href="#PyThat.MeasurementTree.tree_string" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+<p>String representation of the scan definition/measurement tree.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="PyThat.MeasurementTree.labbook">
+<span class="sig-name descname"><span class="pre">labbook</span></span><a class="headerlink" href="#PyThat.MeasurementTree.labbook" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<p>Contains labbook entries as specified in Thatec interface.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="PyThat.MeasurementTree.devices">
+<span class="sig-name descname"><span class="pre">devices</span></span><a class="headerlink" href="#PyThat.MeasurementTree.devices" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<p>Contains devices configuration at beginning of measurement.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="PyThat.MeasurementTree.logs">
+<span class="sig-name descname"><span class="pre">logs</span></span><a class="headerlink" href="#PyThat.MeasurementTree.logs" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<p>Contains log entries which occured during the measurement.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="PyThat.MeasurementTree.metadata">
+<span class="sig-name descname"><span class="pre">metadata</span></span><a class="headerlink" href="#PyThat.MeasurementTree.metadata" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<p>Contains measurement metadata such as date and operator as specified in Thatec interface.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="PyThat.MeasurementTree.construct_tree">
+<span class="sig-name descname"><span class="pre">construct_tree</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#PyThat.MeasurementTree.construct_tree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Goes through scan definition and reconstructs data in .h5 file. Is automatically called on creation of object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="PyThat.MeasurementTree.open_netcdf">
+<span class="sig-name descname"><span class="pre">open_netcdf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#PyThat.MeasurementTree.open_netcdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open netcdf file from savepath.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="PyThat.MeasurementTree.save_netcdf">
+<span class="sig-name descname"><span class="pre">save_netcdf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#PyThat.MeasurementTree.save_netcdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save array to netcdf file at savepath.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="PyThat.MeasurementTree.save_netcdf_dset">
+<span class="sig-name descname"><span class="pre">save_netcdf_dset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#PyThat.MeasurementTree.save_netcdf_dset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save dataset to netcdf file at savepath.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="PyThat.Group">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">PyThat.</span></span><span class="sig-name descname"><span class="pre">Group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m_tree</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#PyThat.MeasurementTree" title="PyThat.MeasurementTree"><span class="pre">PyThat.MeasurementTree</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PyThat.Group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper class for organizing measurement tree.</p>
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">PyThat</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html#examples">Examples</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="usage.html" title="previous chapter">Usage</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Matthias R. Schweizer.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.3.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/api_reference.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
