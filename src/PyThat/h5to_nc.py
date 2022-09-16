@@ -91,7 +91,7 @@ class MeasurementTree:
                 self.array = xr.open_dataarray(self.save_path)
                 return self.array
 
-    def construct_tree(self, data_index: tuple or None = True):
+    def construct_tree(self):
         self.definition = {i: self.convert_to_dict(k) for (i, k) in self.f['scan_definition'].items()}
         self.devices = {i: self.convert_to_dict(k) for (i, k) in self.f['devices'].items()}
         self.labbook = {i: self.convert_to_dict(k) for (i, k) in self.f['labbook'].items()}
@@ -558,6 +558,59 @@ class Row:
         self.group = None
         self.parent = None
         self.name: str or None = None
+
+
+def consolidate_dims(array, name_includes, compare_to: str or None = None, new_dim: str = None):
+    """
+    This function helps finding unnecessary duplicates of dimensions.
+    :param array: The xarry object which is to be changed.
+    :param name_includes: String which must be included in the dimension name or list of dimension names which should be merged.
+    :param compare_to: String or None: The equality of this coordinate axis with all other axis is a condition for
+    merging. Defaults to the first coordinate which satisfies name_includes.
+    :param new_dim: Name which will be given to the merged dimension. Defaults to compare_to
+    :return: xarray object where dimension and coordinate duplicates have been dropped.
+    """
+
+    print("Assuming all given coordinates do have the same values.")
+    candidates = []
+    # find candidates which satisfy name_includes
+    if isinstance(name_includes, str):
+        for x in array.dims:
+            if name_includes in x:
+                candidates.append(x)
+    elif isinstance(name_includes, list):
+        candidates = name_includes
+    # initialize compare to
+    if compare_to is None:
+        compare_to = candidates[0]
+    elif compare_to in candidates:
+        pass
+    else:
+        raise KeyError("compare_to argument not found in selected dimensions")
+    candidates.remove(compare_to)
+    # initialize new_dim
+    if new_dim is None:
+        new_dim = compare_to
+    # initialize list of identical candidates
+    identicals_list = [compare_to]
+
+    temp = array[compare_to].data
+    # check if all axis are identical to temp
+    for dim_name in candidates:
+        if np.array_equal(array[dim_name].data, temp):
+            identicals_list.append(dim_name)
+    print(identicals_list)
+    from string import ascii_letters, digits
+    from random import choices
+    temp_name = "".join(choices(ascii_letters+digits, k=16))
+    for dim_name in identicals_list:
+        array = array.swap_dims({dim_name: temp_name})
+    array = array.assign_coords({temp_name: temp})
+    array = array.drop_vars(identicals_list)
+    array = array.rename_dims({temp_name: new_dim})
+    array = array.rename({temp_name: new_dim})
+    return array
+
 
 
 
