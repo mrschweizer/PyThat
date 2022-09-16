@@ -610,7 +610,7 @@ def consolidate_dims(array, name_includes, compare_to: str or None = None, new_d
     for dim_name in candidates:
         if np.array_equal(array[dim_name].data, temp):
             identicals_list.append(dim_name)
-    print(identicals_list)
+    print(f'Duplicate coordinates found:\n{identicals_list}')
     from string import ascii_letters, digits
     from random import choices
     temp_name = "".join(choices(ascii_letters+digits, k=16))
