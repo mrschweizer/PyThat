@@ -1,7 +1,6 @@
 API Reference
 =============
 
-
 .. py:class:: PyThat.MeasurementTree(path, override=False, index=True)
 
    Return a list of random ingredients as strings.
@@ -121,3 +120,25 @@ API Reference
 .. py:class:: PyThat.Group(m_tree: PyThat.MeasurementTree)
 
    Helper class for organizing measurement tree.
+
+Helper Functions
+""""""""""""""""
+
+.. py:function:: PyThat.consolidate_dims(array, name_includes, compare_to: str or None = None, new_dim: str = None)
+
+   This function helps finding unnecessary duplicates of dimensions.
+
+   :param array: The xarry object which is to be changed.
+
+   :param name_includes: String which must be included in the dimension name or list of dimension names which should be merged.
+
+   :param compare_to: String or None: The equality of this coordinate axis with all other axis is a condition for
+    merging. Defaults to the first coordinate which satisfies name_includes.
+
+   :param new_dim: Name which will be given to the merged dimension. Defaults to compare_to
+
+   :return: xarray object where dimension and coordinate duplicates have been dropped.
+
+
+
+

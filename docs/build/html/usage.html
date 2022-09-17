@@ -45,13 +45,17 @@
 </section>
 <section id="basics-and-scope">
 <h2>Basics and Scope<a class="headerlink" href="#basics-and-scope" title="Permalink to this headline">¶</a></h2>
-<p>The package reconstructs the measurement tree and lets the user choose the row containing an indicator. It then uses the metadata from the measurement tree to construct an xarray object with n+m dimensions, where n is the dimension of the indicator in the specified row and m the number of indents/loops.</p>
-<p>Since xarray is built around labeled arrays, it also reconstructs the dimension label (dims) and label coordinate (coords) attributes of the xarray objects. The scope of PyThat is the conversion into the xarray format. For use of xarray see the well maintained <a class="reference external" href="https://docs.xarray.dev/en/stable/user-guide/index.html">xarray documentation</a>.</p>
+<p>The package reconstructs the measurement tree and lets the user choose the row containing an indicator. It then uses
+the metadata from the measurement tree to construct an xarray object with n+m dimensions, where n is the dimension of
+the indicator in the specified row and m the number of indents/loops.</p>
+<p>Since xarray is built around labeled arrays, it also reconstructs the dimension label (dims) and label coordinate
+(coords) attributes of the xarray objects. The scope of PyThat is the conversion into the xarray format. For use of
+xarray see the well maintained <a class="reference external" href="https://docs.xarray.dev/en/stable/user-guide/index.html">xarray documentation</a>.</p>
 <p>After starting at version 0.27 all data is read for all valid indicators and combined to a dataset. The old version with indexing should still work, however.</p>
 </section>
 </section>
-<section id="examples">
-<h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
+<section id="tutorial">
+<h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
 <section id="load-data">
 <h2>Load Data<a class="headerlink" href="#load-data" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">PyThat</span> <span class="kn">import</span> <span class="n">MeasurementTree</span>
@@ -59,7 +63,8 @@
 <span class="n">mt</span> <span class="o">=</span> <span class="n">MeasurementTree</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The result will look like this:</p>
+<p>This will create a <code class="docutils literal notranslate"><span class="pre">MeasurementTree</span></code> object <code class="docutils literal notranslate"><span class="pre">mt</span></code> in which the measurement data is stored.</p>
+<p>The printout will look somewhat like this:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Number of groups: 2</span>
 <span class="gp gp-VirtualEnv">(0, 0)</span> <span class="go">&quot;row_00&quot;: [&#39;scalar control&#39;, &#39;Anritsu ShockLine MS46xxx VNA&#39;, &#39;Number of points&#39;, 1001.0, 2147483647.0, 1.0]</span>
 <span class="gp gp-VirtualEnv">(0, 1)</span> <span class="go">&quot;row_01&quot;: [&#39;scalar control&#39;, &#39;Anritsu ShockLine MS46xxx VNA&#39;, &#39;Start frequency (MHz)&#39;, 5650.0, 43499.999998, 1.0]</span>
@@ -102,35 +107,400 @@ loaded instead of doing the whole process again.</p>
 <h2>Review Data Structure<a class="headerlink" href="#review-data-structure" title="Permalink to this headline">¶</a></h2>
 <p>Once, the dataset has been created, you can access it via</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">mt</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
-<span class="go">    &lt;xarray.Dataset&gt;</span>
-<span class="go">    Dimensions:             (Set Magnetic Field: 21, Frequency: 1001,</span>
-<span class="go">                             Frequency_1: 1001, Frequency_2: 1001,</span>
-<span class="go">                             Frequency_3: 1001, Frequency_4: 1001,</span>
-<span class="go">                             Frequency_5: 1001, Frequency_6: 1001, Frequency_7: 1001)</span>
-<span class="go">    Coordinates:</span>
-<span class="go">      * Set Magnetic Field  (Set Magnetic Field) float64 130.0 131.2 ... 153.8 155.0</span>
-<span class="go">      * Frequency           (Frequency) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
-<span class="go">      * Frequency_1         (Frequency_1) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
-<span class="go">      * Frequency_2         (Frequency_2) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
-<span class="go">      * Frequency_3         (Frequency_3) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
-<span class="go">      * Frequency_4         (Frequency_4) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
-<span class="go">      * Frequency_5         (Frequency_5) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
-<span class="go">      * Frequency_6         (Frequency_6) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
-<span class="go">      * Frequency_7         (Frequency_7) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
-<span class="go">    Data variables:</span>
-<span class="go">        Im_S11              (Set Magnetic Field, Frequency) float64 0.4498 ... 0....</span>
-<span class="go">        Im_S12              (Set Magnetic Field, Frequency_1) float64 0.001696 .....</span>
-<span class="go">        Im_S21              (Set Magnetic Field, Frequency_2) float64 0.001506 .....</span>
-<span class="go">        Im_S22              (Set Magnetic Field, Frequency_3) float64 -0.1521 ......</span>
-<span class="go">        Re_S11              (Set Magnetic Field, Frequency_4) float64 -0.057 ... ...</span>
-<span class="go">        Re_S12              (Set Magnetic Field, Frequency_5) float64 0.002668 .....</span>
-<span class="go">        Re_S21              (Set Magnetic Field, Frequency_6) float64 0.002619 .....</span>
-<span class="go">        Re_S22              (Set Magnetic Field, Frequency_7) float64 -0.5101 ......</span>
+<span class="go">&lt;xarray.Dataset&gt;</span>
+<span class="go">Dimensions:             (Set Magnetic Field: 21, Frequency: 1001,</span>
+<span class="go">                         Frequency_1: 1001, Frequency_2: 1001,</span>
+<span class="go">                         Frequency_3: 1001, Frequency_4: 1001,</span>
+<span class="go">                         Frequency_5: 1001, Frequency_6: 1001, Frequency_7: 1001)</span>
+<span class="go">Coordinates:</span>
+<span class="go">  * Set Magnetic Field  (Set Magnetic Field) float64 130.0 131.2 ... 153.8 155.0</span>
+<span class="go">  * Frequency           (Frequency) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
+<span class="go">  * Frequency_1         (Frequency_1) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
+<span class="go">  * Frequency_2         (Frequency_2) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
+<span class="go">  * Frequency_3         (Frequency_3) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
+<span class="go">  * Frequency_4         (Frequency_4) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
+<span class="go">  * Frequency_5         (Frequency_5) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
+<span class="go">  * Frequency_6         (Frequency_6) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
+<span class="go">  * Frequency_7         (Frequency_7) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
+<span class="go">Data variables:</span>
+<span class="go">    Im_S11              (Set Magnetic Field, Frequency) float64 0.4498 ... 0....</span>
+<span class="go">    Im_S12              (Set Magnetic Field, Frequency_1) float64 0.001696 .....</span>
+<span class="go">    Im_S21              (Set Magnetic Field, Frequency_2) float64 0.001506 .....</span>
+<span class="go">    Im_S22              (Set Magnetic Field, Frequency_3) float64 -0.1521 ......</span>
+<span class="go">    Re_S11              (Set Magnetic Field, Frequency_4) float64 -0.057 ... ...</span>
+<span class="go">    Re_S12              (Set Magnetic Field, Frequency_5) float64 0.002668 .....</span>
+<span class="go">    Re_S21              (Set Magnetic Field, Frequency_6) float64 0.002619 .....</span>
+<span class="go">    Re_S22              (Set Magnetic Field, Frequency_7) float64 -0.5101 ......</span>
 </pre></div>
 </div>
+<p>This output is rich in information. The first paragraph describes the found dimensions and corresponding shape. This
+particular set of data has one dimension <em>Set Magnetic Field</em> and 8 <em>Frequency</em> dimensions, each with the same size.</p>
+<p>The next paragraph denotes the corresponding coordinates. In this example, there are 9 coordinate arrays, each linked to
+different dimension (denoted by the parentheses). On the right, an excerpt from the coordinate data is shown.</p>
 <p>Indicator rows have been translated to data variables (e.g. Im_S11) and controls to coordinates (e.g. “Set Magnetic Field”).
-Since Im_S11 etc. are 1D data, they have also been assigned a frequency coordinate. The coordinate names have been altered,
+Since Im_S11 etc. are 1D data, they have also been assigned a frequency coordinate. The coordinate names have been chosen,
 so that they are unique, in order to prevent different devices/functions having the same coordinate name.</p>
+<p>In this example, all of the above Frequency dimensions, are equal and equivalent. They <em>are</em> the same quantity and not
+just <em>coincidentally equal</em>. In this case, you should use <code class="docutils literal notranslate"><span class="pre">PyThat.consolidate_dims</span></code> to merge equivalent dimensions.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">PyThat</span> <span class="kn">import</span> <span class="n">consolidate_dims</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">consolidate_dims</span><span class="p">(</span><span class="n">mt</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="s1">&#39;Frequency&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span>
+<span class="go">&lt;xarray.Dataset&gt;</span>
+<span class="go">Dimensions:             (Set Magnetic Field: 21, Frequency: 1001)</span>
+<span class="go">Coordinates:</span>
+<span class="go">  * Set Magnetic Field  (Set Magnetic Field) float64 130.0 131.2 ... 153.8 155.0</span>
+<span class="go">  * Frequency           (Frequency) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
+<span class="go">Data variables:</span>
+<span class="go">    Im_S11              (Set Magnetic Field, Frequency) float64 ...</span>
+<span class="go">    Im_S12              (Set Magnetic Field, Frequency) float64 ...</span>
+<span class="go">    Im_S21              (Set Magnetic Field, Frequency) float64 ...</span>
+<span class="go">    Im_S22              (Set Magnetic Field, Frequency) float64 ...</span>
+<span class="go">    Re_S11              (Set Magnetic Field, Frequency) float64 ...</span>
+<span class="go">    Re_S12              (Set Magnetic Field, Frequency) float64 ...</span>
+<span class="go">    Re_S21              (Set Magnetic Field, Frequency) float64 ...</span>
+<span class="go">    Re_S22              (Set Magnetic Field, Frequency) float64 ...</span>
+</pre></div>
+</div>
+<p>In the process, the dependencies of Data variables have also changed. Now, they are all linked to the same dimension
+<em>Frequency</em>.</p>
+<p>If you want more detailed information on the coordinates, you can call <code class="docutils literal notranslate"><span class="pre">mt.dataset.coords</span></code>. <code class="docutils literal notranslate"><span class="pre">mt.dataset.dims</span></code> will
+return a list of dimension names.</p>
+<p>The data shows example data from a VNA. There are multiple S-parameters. Let’s say you want to access a single parameter.
+This can be done by using square brackets containing a string of the corresponding variable name (<code class="docutils literal notranslate"><span class="pre">'Im_S11'</span></code>), as shown in the printout:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">da</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;Im_S11&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">da</span>
+<span class="go">&lt;xarray.DataArray &#39;Im_S11&#39; (Set Magnetic Field: 21, Frequency: 1001)&gt;</span>
+<span class="go">array([[0.449762, 0.449024, 0.445432, ..., 0.315165, 0.280422, 0.244154],</span>
+<span class="go">       [0.446916, 0.448087, 0.446013, ..., 0.315432, 0.280684, 0.244377],</span>
+<span class="go">       [0.364744, 0.371938, 0.377282, ..., 0.315766, 0.280974, 0.244608],</span>
+<span class="go">       ...,</span>
+<span class="go">       [0.457564, 0.453792, 0.447533, ..., 0.332801, 0.298602, 0.262485],</span>
+<span class="go">       [0.457725, 0.454055, 0.447757, ..., 0.340996, 0.307394, 0.271574],</span>
+<span class="go">       [0.457942, 0.454288, 0.447996, ..., 0.364995, 0.332711, 0.298152]])</span>
+<span class="go">Coordinates:</span>
+<span class="go">  * Set Magnetic Field  (Set Magnetic Field) float64 130.0 131.2 ... 153.8 155.0</span>
+<span class="go">  * Frequency           (Frequency) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
+<span class="go">Attributes:</span>
+<span class="go">    units:</span>
+</pre></div>
+</div>
+<p>This returns an <code class="docutils literal notranslate"><span class="pre">xarray.DataArray</span></code>. This is the starting point for all further evaluation.
+The same approach can be used to retrieve the values of the <em>Frequency</em> coordinate axis: <code class="docutils literal notranslate"><span class="pre">d['Frequency']</span></code> from a
+Dataset or <code class="docutils literal notranslate"><span class="pre">da['Frequency']</span></code> from a DataArray .</p>
+<section id="disclaimer">
+<h3>Disclaimer<a class="headerlink" href="#disclaimer" title="Permalink to this headline">¶</a></h3>
+<p>Everything, that comes after this part, is <strong>not</strong> a proper tutorial, but rather a teaser of what you <em>can</em> do. Please
+look at the <a class="reference external" href="https://docs.xarray.dev/en/stable/user-guide/index.html">xarray documentation</a> for further information.</p>
+</section>
+</section>
+<section id="selecting-data">
+<h2>Selecting Data<a class="headerlink" href="#selecting-data" title="Permalink to this headline">¶</a></h2>
+<p>Let’s say you are only interested in a certain Frequency range. From the previous section, we can already see, that the
+Frequency coordinate contains an area from <code class="docutils literal notranslate"><span class="pre">5.65e+03</span></code> to <code class="docutils literal notranslate"><span class="pre">6.35e+03</span></code> MHz. There are two main methods for selecting data:</p>
+<p><code class="docutils literal notranslate"><span class="pre">da.sel</span></code> is in most cases the most comfortable to use. It lets you select a <em>slice</em> of along a certain coordinate, by
+specifiying start stop and interval. The actual indexing is done by xarray automatically. This can be done in a <em>kwarg</em>
+notation:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">da</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">Frequency</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="mf">5.6e3</span><span class="p">,</span> <span class="mf">5.8e3</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+<span class="go">&lt;xarray.DataArray &#39;Im_S11&#39; (Set Magnetic Field: 21, Frequency: 215)&gt;</span>
+<span class="go">array([[ 0.449762,  0.449024,  0.445432, ..., -0.424727, -0.446139, -0.466247],</span>
+<span class="go">       [ 0.446916,  0.448087,  0.446013, ..., -0.42421 , -0.445718, -0.465891],</span>
+<span class="go">       [ 0.364744,  0.371938,  0.377282, ..., -0.423051, -0.44466 , -0.464935],</span>
+<span class="go">       ...,</span>
+<span class="go">       [ 0.457564,  0.453792,  0.447533, ..., -0.440081, -0.460952, -0.480101],</span>
+<span class="go">       [ 0.457725,  0.454055,  0.447757, ..., -0.439938, -0.460871, -0.480055],</span>
+<span class="go">       [ 0.457942,  0.454288,  0.447996, ..., -0.439832, -0.460777, -0.479958]])</span>
+<span class="go">Coordinates:</span>
+<span class="go">  * Set Magnetic Field  (Set Magnetic Field) float64 130.0 131.2 ... 153.8 155.0</span>
+<span class="go">  * Frequency           (Frequency) float64 5.65e+03 5.651e+03 ... 5.8e+03</span>
+<span class="go">Attributes:</span>
+<span class="go">    units:</span>
+</pre></div>
+</div>
+<p>Another way to supply the selection, is in form of a dictionary with curly brackets. The advantage of this notation is
+the ability to supply coordinate names which include spaces.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">da</span><span class="o">.</span><span class="n">sel</span><span class="p">({</span><span class="s1">&#39;Set Magnetic Field&#39;</span><span class="p">:</span><span class="nb">slice</span><span class="p">(</span><span class="mi">131</span><span class="p">,</span> <span class="mi">154</span><span class="p">,</span> <span class="kc">None</span><span class="p">)})</span>
+<span class="go">&lt;xarray.DataArray &#39;Im_S11&#39; (Set Magnetic Field: 19, Frequency: 1001)&gt;</span>
+<span class="go">array([[0.446916, 0.448087, 0.446013, ..., 0.315432, 0.280684, 0.244377],</span>
+<span class="go">       [0.364744, 0.371938, 0.377282, ..., 0.315766, 0.280974, 0.244608],</span>
+<span class="go">       [0.364957, 0.364845, 0.359775, ..., 0.316024, 0.281234, 0.244815],</span>
+<span class="go">       ...,</span>
+<span class="go">       [0.457339, 0.45351 , 0.447263, ..., 0.328263, 0.29388 , 0.257623],</span>
+<span class="go">       [0.457564, 0.453792, 0.447533, ..., 0.332801, 0.298602, 0.262485],</span>
+<span class="go">       [0.457725, 0.454055, 0.447757, ..., 0.340996, 0.307394, 0.271574]])</span>
+<span class="go">Coordinates:</span>
+<span class="go">  * Set Magnetic Field  (Set Magnetic Field) float64 131.2 132.5 ... 152.5 153.8</span>
+<span class="go">  * Frequency           (Frequency) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
+<span class="go">Attributes:</span>
+<span class="go">    units:</span>
+</pre></div>
+</div>
+<p>Instead of using slices you can also select a single value. For this you may use <code class="docutils literal notranslate"><span class="pre">method='nearest'</span></code> as an additional <em>kwarg</em>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">da</span><span class="o">.</span><span class="n">sel</span><span class="p">({</span><span class="s1">&#39;Set Magnetic Field&#39;</span><span class="p">:</span><span class="mi">131</span><span class="p">},</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">)</span>
+<span class="go">&lt;xarray.DataArray &#39;Im_S11&#39; (Frequency: 1001)&gt;</span>
+<span class="go">array([0.446916, 0.448087, 0.446013, ..., 0.315432, 0.280684, 0.244377])</span>
+<span class="go">Coordinates:</span>
+<span class="go">    Set Magnetic Field  float64 131.2</span>
+<span class="go">  * Frequency           (Frequency) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
+<span class="go">Attributes:</span>
+<span class="go">    units:</span>
+</pre></div>
+</div>
+<p>Please note, that in this case the asterisk in front of the selected coordinate axis vanishes and the <code class="docutils literal notranslate"><span class="pre">Set</span> <span class="pre">Magnetic</span> <span class="pre">Field</span></code> have both vanished.
+This dimension can not be used in further selection. This operation has decreased the dimensionality of the data under review.
+Though multiple selections can be supplied in one call of the <code class="docutils literal notranslate"><span class="pre">.sel</span></code> method
+(e.g. <code class="docutils literal notranslate"><span class="pre">{'Set</span> <span class="pre">Magnetic</span> <span class="pre">Field':slice(131,</span> <span class="pre">154,</span> <span class="pre">None),</span> <span class="pre">'Frequency':</span> <span class="pre">slice(5.6e3,</span> <span class="pre">5.8e3,</span> <span class="pre">None)}</span></code>, slicing and nearest can not be used in the same call.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">.isel</span></code> method works almost identical, just that it does not select the <em>value</em> of a coordinate axis, but the
+index number.</p>
+</section>
+<section id="math-and-computation">
+<h2>Math and Computation<a class="headerlink" href="#math-and-computation" title="Permalink to this headline">¶</a></h2>
+<p>When it comes to basic math, in most cases xarrays behave like numpy arrays.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">absolute</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s1">&#39;Re_S11&#39;</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">d</span><span class="p">[</span><span class="s1">&#39;Im_S11&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">absolute</span>
+<span class="go">&lt;xarray.DataArray (Set Magnetic Field: 21, Frequency: 1001)&gt;</span>
+<span class="go">array([[0.45335944, 0.44938621, 0.445825  , ..., 0.50342391, 0.50166236,</span>
+<span class="go">        0.50006694],</span>
+<span class="go">       [0.45351756, 0.4495329 , 0.44601454, ..., 0.50387743, 0.50214325,</span>
+<span class="go">        0.50055285],</span>
+<span class="go">       [0.38165301, 0.38052807, 0.38066123, ..., 0.50430498, 0.50254997,</span>
+<span class="go">        0.50097015],</span>
+<span class="go">       ...,</span>
+<span class="go">       [0.45800198, 0.45426767, 0.45122987, ..., 0.50852291, 0.50671766,</span>
+<span class="go">        0.50504445],</span>
+<span class="go">       [0.45813408, 0.45450447, 0.45141898, ..., 0.50857588, 0.50686357,</span>
+<span class="go">        0.50521018],</span>
+<span class="go">       [0.45839378, 0.45471707, 0.45162554, ..., 0.50417154, 0.50328084,</span>
+<span class="go">        0.50203811]])</span>
+<span class="go">Coordinates:</span>
+<span class="go">  * Set Magnetic Field  (Set Magnetic Field) float64 130.0 131.2 ... 153.8 155.0</span>
+<span class="go">  * Frequency           (Frequency) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
+</pre></div>
+</div>
+<section id="broadcasting">
+<h3>Broadcasting<a class="headerlink" href="#broadcasting" title="Permalink to this headline">¶</a></h3>
+<p>One major difference is how the so-called <em>broadcasting</em> is handled. Broadcasting is procedure which is used to do math on
+arrays with different dimensionalities. A simple example would be the addition of a scalar value to a 1D array. However,
+this procedure can also be used to combine shapes such as <code class="docutils literal notranslate"><span class="pre">(4,</span> <span class="pre">100,</span> <span class="pre">256)</span></code> and <code class="docutils literal notranslate"><span class="pre">(4,</span> <span class="pre">100)</span></code>. In numpy, broadcasting works
+simply via the order of the dimensions. In xarray, it will broadcast dimensions with the same dimension name to each other.
+While this is very comfortable to use in most cases, it can cause problems, when non equivalent are accidentally given the same name.</p>
+<section id="xarray-convenience-functions">
+<h4>Xarray Convenience Functions<a class="headerlink" href="#xarray-convenience-functions" title="Permalink to this headline">¶</a></h4>
+<p>xarray offers several easy to use features, such as differentiation along an axis <code class="docutils literal notranslate"><span class="pre">diff</span> <span class="pre">=</span> <span class="pre">da.differentiate('Frequency')</span></code>,
+summation or averaging along an axis <code class="docutils literal notranslate"><span class="pre">s</span> <span class="pre">=</span> <span class="pre">da.sum('Frequency')</span></code>, <code class="docutils literal notranslate"><span class="pre">avg</span> <span class="pre">=</span> <span class="pre">da.mean('Frequency')</span></code>. This is particularly
+powerful, since it can be combined with selection. For example the average of a specified frequency range:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">da</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">Frequency</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="mf">5.6e3</span><span class="p">,</span> <span class="mf">5.8e3</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">)</span>
+<span class="go">&lt;xarray.DataArray &#39;Im_S11&#39; (Set Magnetic Field: 21)&gt;</span>
+<span class="go">array([-0.01415238, -0.01310859, -0.01218391, -0.01642724, -0.01769279,</span>
+<span class="go">       -0.0174761 , -0.01850722, -0.02077479, -0.02052241, -0.01970442,</span>
+<span class="go">       -0.01889676, -0.01832782, -0.01798551, -0.01778508, -0.01764641,</span>
+<span class="go">       -0.01754683, -0.01746456, -0.01738205, -0.01731453, -0.0172626 ,</span>
+<span class="go">       -0.01721515])</span>
+<span class="go">Coordinates:</span>
+<span class="go">  * Set Magnetic Field  (Set Magnetic Field) float64 130.0 131.2 ... 153.8 155.0</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">.min()</span></code>, <code class="docutils literal notranslate"><span class="pre">.max()</span></code> can compute minimum and maximum values of an array (along a desired axis), while <code class="docutils literal notranslate"><span class="pre">.idxmin()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">.idxmax()</span></code> compute the coordinate labels at which these are found.</p>
+</section>
+</section>
+<section id="masking-arrays">
+<h3>Masking Arrays<a class="headerlink" href="#masking-arrays" title="Permalink to this headline">¶</a></h3>
+<p>Data selection only works along the cartesian coordinates of the data under investigation. In some situations, however,
+it is necessary to exclude some data according to some other criterion. This could mean dropping all values above a
+certain value or only selecting values inside a circle of 2D DataArray with x, y coordinates. The
+<code class="docutils literal notranslate"><span class="pre">xarray.Dataarray.where</span></code>-method allows for the selection of data on the basis of a boolean map, e.g. <code class="docutils literal notranslate"><span class="pre">da&gt;0.4</span></code>.
+All entries of the DataArray, which do not satisfy this condition, will be viewed as <em>nan</em> which means not a number.
+These conditions can also be combined by using python bitwise operators <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> (AND), <code class="docutils literal notranslate"><span class="pre">|</span></code> (OR), <code class="docutils literal notranslate"><span class="pre">^</span></code> (XOR) , <code class="docutils literal notranslate"><span class="pre">~</span></code> (NOT)
+and can utilize every data source such as coordinates or other data variables, as long as they can be broadcasted together.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">da</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">da</span><span class="o">&gt;</span><span class="mf">0.4</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">da</span><span class="o">&lt;</span><span class="mf">0.447</span><span class="p">))</span>
+<span class="go">&lt;xarray.DataArray &#39;Im_S11&#39; (Set Magnetic Field: 21, Frequency: 1001)&gt;</span>
+<span class="go">array([[       nan,        nan, 0.44543207, ...,        nan,        nan,</span>
+<span class="go">               nan],</span>
+<span class="go">       [0.44691569,        nan, 0.44601342, ...,        nan,        nan,</span>
+<span class="go">               nan],</span>
+<span class="go">       [       nan,        nan,        nan, ...,        nan,        nan,</span>
+<span class="go">               nan],</span>
+<span class="go">       ...,</span>
+<span class="go">       [       nan,        nan,        nan, ...,        nan,        nan,</span>
+<span class="go">               nan],</span>
+<span class="go">       [       nan,        nan,        nan, ...,        nan,        nan,</span>
+<span class="go">               nan],</span>
+<span class="go">       [       nan,        nan,        nan, ...,        nan,        nan,</span>
+<span class="go">               nan]])</span>
+<span class="go">Coordinates:</span>
+<span class="go">  * Set Magnetic Field  (Set Magnetic Field) float64 130.0 131.2 ... 153.8 155.0</span>
+<span class="go">  * Frequency           (Frequency) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
+<span class="go">Attributes:</span>
+<span class="go">    units:</span>
+</pre></div>
+</div>
+<p>This technique can be quite helpful in order to filter data, for instance by only considering data close to a certain
+feature in summation. The advantage here is, that it can easily be parametrized as opposed to <code class="docutils literal notranslate"><span class="pre">.sel</span></code></p>
+</section>
+<section id="manipulating-the-underlying-numpy-array">
+<h3>Manipulating the underlying Numpy Array<a class="headerlink" href="#manipulating-the-underlying-numpy-array" title="Permalink to this headline">¶</a></h3>
+<p>Sometimes, it can be helpful to just drop the labeled axis. You can access the underlying numpy array by calling.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">nd_array</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The other way round, you can manipulate the contents of a DataArray by using:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">da</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">nd_array</span> <span class="o">*</span> <span class="mi">5</span>
+</pre></div>
+</div>
+<p>While this technique can be useful, sometimes, in this particular case, it would have the same result as:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">da</span> <span class="o">=</span> <span class="n">da</span> <span class="o">*</span> <span class="mi">5</span>
+</pre></div>
+</div>
+<p>Alternatively, you can work with a (deep) copy:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">new_da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">nd_array</span><span class="o">-</span><span class="mi">25</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can also manipulate coordinates. This overwrites the values of Frequency coordinate label array:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">da</span><span class="p">[</span><span class="s1">&#39;Frequency&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">da</span><span class="p">[</span><span class="s1">&#39;Frequency&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">5</span>
+</pre></div>
+</div>
+<p>Or you can create a new coordinate axis along Frequency:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">da</span><span class="o">.</span><span class="n">assign_coords</span><span class="p">({</span><span class="s1">&#39;double frequency&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">,</span> <span class="n">da</span><span class="p">[</span><span class="s1">&#39;Frequency&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">*</span><span class="mi">2</span><span class="p">)})</span>
+<span class="go">&lt;xarray.DataArray &#39;Im_S11&#39; (Set Magnetic Field: 21, Frequency: 1001)&gt;</span>
+<span class="go">array([[0.449762, 0.449024, 0.445432, ..., 0.315165, 0.280422, 0.244154],</span>
+<span class="go">       [0.446916, 0.448087, 0.446013, ..., 0.315432, 0.280684, 0.244377],</span>
+<span class="go">       [0.364744, 0.371938, 0.377282, ..., 0.315766, 0.280974, 0.244608],</span>
+<span class="go">       ...,</span>
+<span class="go">       [0.457564, 0.453792, 0.447533, ..., 0.332801, 0.298602, 0.262485],</span>
+<span class="go">       [0.457725, 0.454055, 0.447757, ..., 0.340996, 0.307394, 0.271574],</span>
+<span class="go">       [0.457942, 0.454288, 0.447996, ..., 0.364995, 0.332711, 0.298152]])</span>
+<span class="go">Coordinates:</span>
+<span class="go">  * Set Magnetic Field  (Set Magnetic Field) float64 130.0 131.2 ... 153.8 155.0</span>
+<span class="go">  * Frequency           (Frequency) float64 5.65e+03 5.651e+03 ... 6.35e+03</span>
+<span class="go">    double frequency    (Frequency) float64 1.13e+04 1.13e+04 ... 1.27e+04</span>
+<span class="go">Attributes:</span>
+<span class="go">    units:</span>
+</pre></div>
+</div>
+<p>This syntax can even be used to create 2D coordinates (e.g. radius as a function of x and y, or as in this case the <em>nonsensical</em> sum of both coordinates).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+<span class="n">f</span> <span class="o">=</span> <span class="n">da</span><span class="p">[</span><span class="s1">&#39;Frequency&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">da</span><span class="p">[</span><span class="s1">&#39;Set Magnetic Field&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+<span class="n">F</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s1">&#39;ij&#39;</span><span class="p">)</span>
+<span class="n">R</span> <span class="o">=</span> <span class="n">F</span> <span class="o">+</span> <span class="n">B</span>
+<span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">assign_coords</span><span class="p">(</span><span class="n">R</span><span class="o">=</span><span class="p">((</span><span class="s1">&#39;Frequency&#39;</span><span class="p">,</span> <span class="s1">&#39;Set Magnetic Field&#39;</span><span class="p">),</span> <span class="n">R</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="fitting">
+<h2>Fitting<a class="headerlink" href="#fitting" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">xarray.DataArray.polyfit</span></code> can be used for quick polynomial fitting. This snippet calculates the slope (degree=1) along the
+<em>Frequency</em> axis.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">da</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="s1">&#39;polyfit_coefficients&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">degree</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">&lt;xarray.DataArray &#39;polyfit_coefficients&#39; (Set Magnetic Field: 21)&gt;</span>
+<span class="go">array([-1.01552749e-04, -1.00840547e-04, -9.38317778e-05, -9.36537903e-05,</span>
+<span class="go">       -9.70468779e-05, -9.99572567e-05, -1.01713737e-04, -1.02445728e-04,</span>
+<span class="go">       -1.02751882e-04, -1.02915830e-04, -1.02997863e-04, -1.03150440e-04,</span>
+<span class="go">       -1.03228815e-04, -1.03372508e-04, -1.03522292e-04, -1.03731269e-04,</span>
+<span class="go">       -1.03966911e-04, -1.04177855e-04, -1.04534305e-04, -1.05104657e-04,</span>
+<span class="go">       -1.06324887e-04])</span>
+<span class="go">Coordinates:</span>
+<span class="go">  * Set Magnetic Field  (Set Magnetic Field) float64 130.0 131.2 ... 153.8 155.0</span>
+<span class="go">    degree              int32 1</span>
+</pre></div>
+</div>
+<p>For more elaborate models <code class="docutils literal notranslate"><span class="pre">xarray.DataArray.curvefit</span></code> can be used. However, this exceeds the scope of this tutorial.</p>
+</section>
+<section id="interpolation">
+<h2>Interpolation<a class="headerlink" href="#interpolation" title="Permalink to this headline">¶</a></h2>
+<p>xarray offers a convenient interpolation method <code class="docutils literal notranslate"><span class="pre">xarray.DataArray.interp</span></code>. Interpolate works especially easy by supplying
+DataArrays as input.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">new_frequency</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">da</span><span class="p">[</span><span class="s1">&#39;Frequency&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span> <span class="nb">float</span><span class="p">(</span><span class="n">da</span><span class="p">[</span><span class="s1">&#39;Frequency&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()),</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">new_frequency</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">new_frequency</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;New Frequency&#39;</span><span class="p">),</span> <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;New Frequency&#39;</span><span class="p">:</span> <span class="n">new_frequency</span><span class="p">})</span>
+<span class="n">interpolated_data</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">Frequency</span><span class="o">=</span><span class="n">new_frequency</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">interpolated_data</span><span class="o">.</span><span class="n">isel</span><span class="p">({</span><span class="s1">&#39;Set Magnetic Field&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}))</span>
+</pre></div>
+</div>
+<p>Will result in:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">&lt;xarray.DataArray &#39;Re_S11&#39; (New Frequency: 4)&gt;</span>
+<span class="go">array([-0.05700159, -0.53417212,  0.1511845 ,  0.43641236])</span>
+<span class="go">Coordinates:</span>
+<span class="go">    Set Magnetic Field  float64 130.0</span>
+<span class="go">    Frequency           (New Frequency) float64 5.65e+03 5.883e+03 ... 6.35e+03</span>
+<span class="go">  * New Frequency       (New Frequency) float64 5.65e+03 5.883e+03 ... 6.35e+03</span>
+<span class="go">Attributes:</span>
+<span class="go">    units:</span>
+</pre></div>
+</div>
+<p>This can also be used as a means of coordinate transformation. AS you can see in the above example, the coordinate
+dimension has changed from <em>Frequency</em> in the original DataArray to <em>New Frequency</em>, the dimension name as supplied by
+the new_frequency DataArray. The <em>value</em> of new_frequency marks the value <em>for that coordinate</em> in the <em>old</em>
+coordinate system. In the above example both are equal. On the other hand you can as well construct something like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">new_frequency</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">da</span><span class="p">[</span><span class="s1">&#39;Frequency&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span> <span class="nb">float</span><span class="p">(</span><span class="n">da</span><span class="p">[</span><span class="s1">&#39;Frequency&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()),</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">unit_conversion</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">new_frequency</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;New Frequency&#39;</span><span class="p">),</span> <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;New Frequency&#39;</span><span class="p">:</span> <span class="n">new_frequency</span><span class="o">/</span><span class="mi">1000</span><span class="p">})</span>
+<span class="n">interpolated_data</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">Frequency</span><span class="o">=</span><span class="n">unit_conversion</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">interpolated_data</span><span class="o">.</span><span class="n">isel</span><span class="p">({</span><span class="s1">&#39;Set Magnetic Field&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}))</span>
+</pre></div>
+</div>
+<p>Here, the coordinate axis has been simultaneously divided by a factor of 1000. This gets particularly interesting in the
+case of 2D interpolation.</p>
+<p>In this case, you can specify an array on a grid in a new coordinate system, whose values contain the coordinates in the
+old coordinate system. The interpolation then performs a lookup operation for each point of the grid in the new
+coordinate system and fills it with corresponding values of the old coordinate system at the specified position.</p>
+<p>This code snipped transforms an array which is filled in polar coordinates into data in cartesian coordinates.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">kx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">k_edge</span><span class="o">//</span><span class="n">mod</span><span class="p">,</span> <span class="n">k_edge</span><span class="o">//</span><span class="n">mod</span><span class="p">,</span> <span class="mi">30</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">ky</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">k_edge</span><span class="o">//</span><span class="n">mod</span><span class="p">,</span> <span class="n">k_edge</span><span class="o">//</span><span class="n">mod</span><span class="p">,</span> <span class="mi">30</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">KX</span><span class="p">,</span> <span class="n">KY</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">kx</span><span class="p">,</span> <span class="n">ky</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s1">&#39;ij&#39;</span><span class="p">)</span>
+
+<span class="n">angle_new</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">KX</span><span class="p">,</span> <span class="n">KY</span><span class="p">)</span><span class="o">*</span><span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;kx&#39;</span><span class="p">,</span> <span class="s1">&#39;ky&#39;</span><span class="p">),</span> <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;kx&#39;</span><span class="p">:</span> <span class="n">kx</span><span class="p">,</span> <span class="s1">&#39;ky&#39;</span><span class="p">:</span> <span class="n">ky</span><span class="p">})</span>
+<span class="n">k_new</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">KX</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">KY</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;kx&#39;</span><span class="p">,</span> <span class="s1">&#39;ky&#39;</span><span class="p">),</span> <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;kx&#39;</span><span class="p">:</span> <span class="n">kx</span><span class="p">,</span> <span class="s1">&#39;ky&#39;</span><span class="p">:</span> <span class="n">ky</span><span class="p">})</span>
+<span class="n">polate</span> <span class="o">=</span> <span class="n">disp</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">theta</span><span class="o">=</span><span class="n">angle_new</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k_new</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="plotting">
+<h2>Plotting<a class="headerlink" href="#plotting" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">xarray</span></code> offers a powerful interface for <code class="docutils literal notranslate"><span class="pre">matplotlib</span></code>. Plots can be generated by calling the
+<code class="docutils literal notranslate"><span class="pre">xarray.DataArra.plot</span></code> method. It will try to infer the kind of plot best suited for a given array shape.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">da</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>In the case of 2D data, this will result in a colormap.</p>
+<p>In order to specify the shape of a plot in more detail, the plot can be created by calling one of
+<code class="docutils literal notranslate"><span class="pre">xarray.DataArray.plot.line</span></code>, <code class="docutils literal notranslate"><span class="pre">xarray.DataArray.plot.scatter</span></code>, <code class="docutils literal notranslate"><span class="pre">xarray.DataArray.plot.imshow</span></code>,
+<code class="docutils literal notranslate"><span class="pre">xarray.DataArray.plot.pcolormesh</span></code>. For instance the same data can be plotted as:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">da</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">line</span><span class="p">(</span><span class="n">hue</span><span class="o">=</span><span class="s1">&#39;Set Magnetic Field&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this particular example, the data will be shown as a line plot, where each slice along <em>Set Magnetic Field</em> is given a different color.</p>
+<p>If you want to see, what each of these plot types look like, please check the <a class="reference external" href="https://docs.xarray.dev/en/stable/user-guide/plotting.html">xarray plotting section</a>.</p>
+<p>However, as a quick start, it helps to know, that in the xarray interface to matplotlib, dimension names can be supplied
+to the plotting function, to give that dimension a certain function in the plot.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 51%" />
+<col style="width: 49%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">x</span></code></p></td>
+<td><p>Use coordinate as x-axis</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">y</span></code></p></td>
+<td><p>Use coordinate as y-axis</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hue</span></code></p></td>
+<td><p>Change line color</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">col</span></code></p></td>
+<td><p>Distribute along subplot columns</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">row</span></code></p></td>
+<td><p>Distribute along subplot rows</p></td>
+</tr>
+</tbody>
+</table>
+<p>The last two keywords are particularly interesting, since they can be used to generate multiple panels in a grid
+arangement order. This is very helpful to get a hold of large amounts of data on one glance.</p>
+<p>You can also use the <code class="docutils literal notranslate"><span class="pre">ax</span></code> keyword to assign a plot to a previously generated matplotlib axis. This can be very helpful
+if you are using the object oriented matplotlib interface.</p>
 </section>
 </section>
 
@@ -158,9 +528,14 @@ so that they are unique, in order to prevent different devices/functions having 
 <li class="toctree-l2"><a class="reference internal" href="#basics-and-scope">Basics and Scope</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="#examples">Examples</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="#tutorial">Tutorial</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#load-data">Load Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#review-data-structure">Review Data Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#selecting-data">Selecting Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#math-and-computation">Math and Computation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#fitting">Fitting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#interpolation">Interpolation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#plotting">Plotting</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
