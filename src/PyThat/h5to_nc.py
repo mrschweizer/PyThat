@@ -591,27 +591,35 @@ def consolidate_dims(array, name_includes, compare_to: str or None = None, new_d
                 candidates.append(x)
     elif isinstance(name_includes, list):
         candidates = name_includes
-    # initialize compare to
-    if compare_to is None:
-        compare_to = candidates[0]
-    elif compare_to in candidates:
-        pass
-    else:
-        raise KeyError("compare_to argument not found in selected dimensions")
-    candidates.remove(compare_to)
-    # initialize new_dim
-    if new_dim is None:
-        new_dim = compare_to
-    # initialize list of identical candidates
-    identicals_list = [compare_to]
-    temp = array[compare_to].data
-    # check if all axis are identical to temp
-    for dim_name in candidates:
-        if np.array_equal(array[dim_name].data, temp):
-            identicals_list.append(dim_name)
-    if len(identicals_list)>1:
-        print(f'Duplicate coordinates found:\n{identicals_list}')
-    else:
+    candidates_backup = candidates.copy()
+    compare_to_backup = compare_to
+    new_dim_backup = new_dim
+    for test in candidates_backup:
+        candidates = candidates_backup.copy()
+        compare_to = compare_to_backup
+        new_dim = new_dim_backup
+        # initialize compare to
+        if compare_to is None:
+            compare_to = test
+        elif compare_to in candidates:
+            pass
+        else:
+            raise KeyError("compare_to argument not found in selected dimensions")
+        candidates.remove(compare_to)
+        # initialize new_dim
+        if new_dim is None:
+            new_dim = compare_to
+        # initialize list of identical candidates
+        identicals_list = [compare_to]
+        temp = array[compare_to].data
+        # check if all axis are identical to temp
+        for dim_name in candidates:
+            if np.array_equal(array[dim_name].data, temp):
+                identicals_list.append(dim_name)
+        if len(identicals_list)>1:
+            print(f'Duplicate coordinates found:\n{identicals_list}')
+            break
+    if not len(identicals_list)>1:
         raise ValueError("No duplicate coordinate axis found. Try using the 'compare_to' argument.")
     from string import ascii_letters, digits
     from random import choices
