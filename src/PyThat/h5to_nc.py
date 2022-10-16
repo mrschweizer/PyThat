@@ -3,6 +3,7 @@ import numpy as np
 import pathlib as pl
 import textwrap
 import xarray as xr
+import json
 # import os
 # import io
 
@@ -95,12 +96,20 @@ class MeasurementTree:
                 self.save_path = self.path.with_name(name).with_suffix('.nc').absolute()
                 self.array = xr.open_dataarray(self.save_path)
                 self.dataset = xr.open_dataarray(self.save_path)
-                return self.array
             except FileNotFoundError:
                 self.save_netcdf()
                 self.array = xr.open_dataarray(self.save_path)
                 self.dataset = xr.open_dataarray(self.save_path)
-                return self.array
+        try:
+            self.devices = json.loads(self.dataset.attrs['devices'])
+            self.labbook = json.loads(self.dataset.attrs['labbook'])
+            self.logs = json.loads(self.dataset.attrs['logs'])
+            self.definition = json.loads(self.dataset.attrs['scan_definition'])
+            self.tree_string = json.loads(self.dataset.attrs['measurement_tree'])
+        except KeyError:
+            print('Metadata not found. It will not be available.')
+
+
 
     def construct_tree(self):
         self.definition = {i: self.convert_to_dict(k) for (i, k) in self.f['scan_definition'].items()}
@@ -425,6 +434,17 @@ class MeasurementTree:
             all_indicators.append(self.array)
 
         self.dataset = xr.combine_by_coords(all_indicators)
+
+        # add metadata to xarray attrs
+        attrs = {'devices': self.devices, 'labbook': self.labbook, 'logs': self.logs, 'measurement_tree': self.tree_string, 'scan_definition': self.definition}
+        from json import dumps
+        for attr, val in attrs.items():
+            self.dataset.attrs[attr] = dumps(val)
+            # if isinstance(val, dict):
+            #     self.dataset.attrs[attr] = dumps(val)
+            # elif isinstance(val, str):
+            #     self.dataset.attrs[attr] = dumps(val)
+
 
     @staticmethod
     def avoid_duplicate(init_name, lis):
