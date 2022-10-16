@@ -22,7 +22,7 @@ copyright = '2022, Matthias R. Schweizer'
 author = 'Matthias R. Schweizer'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.33'
+release = '0.0.39'
 
 
 # -- General configuration ---------------------------------------------------
