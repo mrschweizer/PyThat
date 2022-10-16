@@ -4,6 +4,7 @@ import pathlib as pl
 import textwrap
 import xarray as xr
 import json
+import yaml
 # import os
 # import io
 
@@ -36,6 +37,7 @@ class MeasurementTree:
         self.logs = None
         self.dataset = None
         self.metadata = {}
+        self.attrs = None
 
         if not override:
             try:
@@ -106,6 +108,11 @@ class MeasurementTree:
             self.logs = json.loads(self.dataset.attrs['logs'])
             self.definition = json.loads(self.dataset.attrs['scan_definition'])
             self.tree_string = json.loads(self.dataset.attrs['measurement_tree'])
+            self.attrs = {'devices': self.devices,
+                          'labbook': self.labbook,
+                          'logs': self.logs,
+                          'measurement_tree': self.tree_string,
+                          'scan_definition': self.definition}
         except KeyError:
             print('Metadata not found. It will not be available.')
 
@@ -113,7 +120,7 @@ class MeasurementTree:
 
     def construct_tree(self):
         self.definition = {i: self.convert_to_dict(k) for (i, k) in self.f['scan_definition'].items()}
-        self.devices = {i: self.convert_to_dict(k) for (i, k) in self.f['devices'].items()}
+        self.devices = {i: self.convert_to_dict(k, truncate=True) for (i, k) in self.f['devices'].items()}
         self.labbook = {i: self.convert_to_dict(k) for (i, k) in self.f['labbook'].items()}
         self.logs = self.convert_to_dict(self.f['measurement/log'])
         """
@@ -436,15 +443,29 @@ class MeasurementTree:
         self.dataset = xr.combine_by_coords(all_indicators)
 
         # add metadata to xarray attrs
-        attrs = {'devices': self.devices, 'labbook': self.labbook, 'logs': self.logs, 'measurement_tree': self.tree_string, 'scan_definition': self.definition}
+        try:
+            self.attrs = {'devices': self.devices,
+                          'labbook': self.labbook,
+                          'logs': self.logs,
+                          'measurement_tree': self.tree_string,
+                          'scan_definition': self.definition}
+        except NameError:
+            print('Metadata has not been initialized.')
         from json import dumps
-        for attr, val in attrs.items():
+        for attr, val in self.attrs.items():
             self.dataset.attrs[attr] = dumps(val)
             # if isinstance(val, dict):
             #     self.dataset.attrs[attr] = dumps(val)
             # elif isinstance(val, str):
             #     self.dataset.attrs[attr] = dumps(val)
 
+    def print_metadata(self, metadata):
+        """
+        Print additional metadata in yaml form.
+        :param metadata: Can be {'devices', 'labbook', 'logs', 'scan_definition'}
+        :return: None
+        """
+        print(yaml.dump(self.attrs[metadata]))
 
     @staticmethod
     def avoid_duplicate(init_name, lis):
