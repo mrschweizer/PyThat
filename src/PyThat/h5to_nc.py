@@ -604,13 +604,15 @@ def consolidate_dims(array, name_includes, compare_to: str or None = None, new_d
         new_dim = compare_to
     # initialize list of identical candidates
     identicals_list = [compare_to]
-
     temp = array[compare_to].data
     # check if all axis are identical to temp
     for dim_name in candidates:
         if np.array_equal(array[dim_name].data, temp):
             identicals_list.append(dim_name)
-    print(f'Duplicate coordinates found:\n{identicals_list}')
+    if len(identicals_list)>1:
+        print(f'Duplicate coordinates found:\n{identicals_list}')
+    else:
+        raise ValueError("No duplicate coordinate axis found. Try using the 'compare_to' argument.")
     from string import ascii_letters, digits
     from random import choices
     temp_name = "".join(choices(ascii_letters+digits, k=16))
