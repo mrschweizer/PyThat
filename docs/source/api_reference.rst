@@ -117,6 +117,13 @@ API Reference
 
       Save dataset to netcdf file at savepath.
 
+   .. py:method:: print_metadata(metadata)
+
+      Comfort function to print metadata in yaml formatting.
+
+   :param metadata: Can be Can be {'devices', 'labbook', 'logs', 'scan_definition'}
+
+
 .. py:class:: PyThat.Group(m_tree: PyThat.MeasurementTree)
 
    Helper class for organizing measurement tree.
@@ -133,7 +140,7 @@ Helper Functions
    :param name_includes: String which must be included in the dimension name or list of dimension names which should be merged.
 
    :param compare_to: String or None: The equality of this coordinate axis with all other axis is a condition for
-    merging. Defaults to the first coordinate which satisfies name_includes.
+    merging. If this entry is not provided, it loops through all entries which match name_includes, until a duplicate is found.
 
    :param new_dim: Name which will be given to the merged dimension. Defaults to compare_to
 
