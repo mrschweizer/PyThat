@@ -25,23 +25,4 @@ For use of xarray see the [documentation](http://xarray.pydata.org/en/stable/use
 After starting at version 0.27 all data is read for all valid indicators and combined to a dataset.
 The old version with indexing should still work, however.
 
-```
-from PyThat import MeasurementTree
-import xarray as xr
-import matplotlib.pyplot as plt
-
-# define path to h5 file, can be relative or absolute path
-path = r'D:\Pycharm\PyThat\examples\M486 Dispersion 40 mT.h5'
-
-# Get dataset from file
-data = MeasurementTree(path, override=True).dataset
-print(data)
-
-# Get variable name from printout
-interesting_data_name = "2,1: Acquire spectrum"
-interesting_data = data[interesting_data_name] 
-
-# Select and plot data
-interesting_data.sel(dict(Frequency=slice(5, 15, None))).plot(col='Set Field')
-plt.show()
-```
+For usage example, see [PyThat Documentation](https://pythat.readthedocs.io/en/latest/).
