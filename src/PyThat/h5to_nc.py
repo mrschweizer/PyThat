@@ -15,6 +15,7 @@ class MeasurementTree:
         :param filepath: r-string that points to h5 file
         :param index: optional: tuple that describes group number and group internal number
         :param chunk: None will skip chunking before saving, True will set chunks to 'auto', dict will forward dict to xarray.Dataset.chunk call
+        :param keep_file: If False (default), the file will be closed after conversion.
         """
         self.filepath = filepath
         self.path = pl.Path(filepath).absolute()
