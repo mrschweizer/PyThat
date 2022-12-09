@@ -92,7 +92,8 @@ Review Data Structure
 
 Once, the dataset has been created, you can access it via
 
->>> print(mt.dataset)
+>>> d = mt.dataset
+>>> print(d)
 <xarray.Dataset>
 Dimensions:             (Set Magnetic Field: 21, Frequency: 1001,
                          Frequency_1: 1001, Frequency_2: 1001,
@@ -133,7 +134,7 @@ just *coincidentally equal*. In this case, you should use ``PyThat.consolidate_d
 
 >>> from PyThat import consolidate_dims
 >>> d = consolidate_dims(mt.dataset, 'Frequency')
->>> d
+>>> print(d)
 <xarray.Dataset>
 Dimensions:             (Set Magnetic Field: 21, Frequency: 1001)
 Coordinates:
@@ -174,9 +175,9 @@ Coordinates:
 Attributes:
     units:
 
-This returns an ``xarray.DataArray``. This is the starting point for all further evaluation.
+This returns an ``xarray.DataArray``, a subset of the previously introduced ``xarray.Dataset``. This is the starting point for all further evaluation.
 The same approach can be used to retrieve the values of the *Frequency* coordinate axis: ``d['Frequency']`` from a
-Dataset or ``da['Frequency']`` from a DataArray .
+Dataset or ``da['Frequency']`` from a DataArray.
 
 Disclaimer
 """"""""""
