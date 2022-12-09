@@ -10,7 +10,7 @@ import yaml
 
 
 class MeasurementTree:
-    def __init__(self, filepath, index=True, override: bool = False):
+    def __init__(self, filepath, index=True, override: bool = False, chunk=None):
         """
         :param filepath: r-string that points to h5 file
         :param index: optional: tuple that describes group number and group internal number
@@ -23,6 +23,7 @@ class MeasurementTree:
         self.tree = [[]]
         self.indent_max = 0
         self.new_tree = []
+        self.chunk = chunk
         self.target = None
         self.shape = None
         self.data = None
@@ -70,6 +71,11 @@ class MeasurementTree:
         else:
             self.save_path = self.path.with_suffix('.nc').absolute()
         if self.dataset is not None:
+            if self.chunk is not None:
+                if isinstance(self.dataset, dict):
+                    self.dataset = self.dataset.chunk(**self.chunk)
+                elif self.chunk is True:
+                    self.dataset = self.dataset.chunk(chunks='auto')
             self.dataset.to_netcdf(self.save_path)
             print('Saved dataset as {}'.format(self.save_path))
         elif self.array is not None:
