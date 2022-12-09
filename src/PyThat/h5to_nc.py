@@ -10,7 +10,7 @@ import yaml
 
 
 class MeasurementTree:
-    def __init__(self, filepath, index=True, override: bool = False, chunk=None):
+    def __init__(self, filepath, index=True, override: bool = False, chunk=None, keep_file=False):
         """
         :param filepath: r-string that points to h5 file
         :param index: optional: tuple that describes group number and group internal number
@@ -59,6 +59,8 @@ class MeasurementTree:
             if index is False:
                 return
             self.save_netcdf()
+        if not keep_file:
+            self.f.close()
 
     def list_hdf5(self):
         print(self.f.visit(print))
