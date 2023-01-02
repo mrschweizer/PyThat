@@ -328,7 +328,13 @@ class MeasurementTree:
 
             global_row = self.target[row][0]
 
-            self.indicator_name = self.definition[global_row]['control name']
+            try:
+                self.indicator_name = self.definition[global_row]['control name']
+            except KeyError:
+                if self.definition[global_row]['function'] == 'internal - numeric input':
+                    self.indicator_name = self.definition[global_row]['name']
+                else:
+                    raise KeyError(f'Error while trying to fetch the name for an numeric input in {global_row}')
             print()
             print("Building xarray object for:")
             print(f"{self.indicator_name}, {global_row}")
