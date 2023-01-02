@@ -10,7 +10,7 @@ import yaml
 
 
 class MeasurementTree:
-    def __init__(self, filepath, index=True, override: bool = False, chunk=None, keep_file=False):
+    def __init__(self, filepath, index=True, override: bool = False, chunk=None, keep_file_open=False):
         """
         :param filepath: r-string that points to h5 file
         :param index: optional: tuple that describes group number and group internal number
@@ -60,7 +60,7 @@ class MeasurementTree:
             if index is False:
                 return
             self.save_netcdf()
-        if not keep_file:
+        if not keep_file_open:
             self.f.close()
 
     def list_hdf5(self):
@@ -218,7 +218,7 @@ class MeasurementTree:
                     except KeyError:
                         pass
                 try:
-                    if k['function'] == 'indicator':
+                    if k['function'] in ['indicator', 'internal - numeric input']:
                         possible_indicators.append((group, row))
                 except KeyError:
                     pass
@@ -317,7 +317,6 @@ class MeasurementTree:
             # self.index = x
             self.target: Group = self.new_tree[group]
 
-
             try:
                 self.data = self.target.get_data(row)
             except KeyError:
@@ -374,13 +373,17 @@ class MeasurementTree:
                         print(f'Scalar control {control_name} without data. Generating coords.')
                         if isinstance(self.definition[parent_row]['start'], list):
                             part = []
+                            roi = []
+                            # TODO: Find a way to save this information for later use. Save list of steps in array.
                             for sta, sto, ste, eq in zip(self.definition[parent_row]['start'],
                                                          self.definition[parent_row]['stop'],
                                                          self.definition[parent_row]['steps'],
                                                          self.definition[parent_row]['equation']):
                                 part.append(np.linspace(sta, sto, int(ste)))
+                                roi.append(int(ste))
                                 row_data = np.concatenate(part)
                         else:
+                            roi = [int(self.definition[parent_row]['steps'])]
                             row_data = np.linspace(self.definition[parent_row]['start'],
                                                    self.definition[parent_row]['stop'],
                                                    int(self.definition[parent_row]['steps']))
@@ -427,6 +430,7 @@ class MeasurementTree:
             try:
                 self.data = np.reshape(self.data, self.shape)
             except ValueError:
+                # TODO: Find a way to drop empty slices
                 print('Measurement not finished?')
                 print(f'Desired shape: {self.shape}, data shape: {self.data.shape}, size: {self.data.size}')
                 flattened_length = np.prod(shape)
@@ -436,9 +440,12 @@ class MeasurementTree:
                 print(f'Number of core measurements: {flattened_length_data} of {flattened_length}')
                 flattened_shape = (flattened_length,)+data_shape
                 print(f'flattened shape: {flattened_shape}')
+                # initialize flattened with nan
                 flattened_new = np.empty(flattened_shape)
                 flattened_new[...] = np.nan
+                # write existing override nans with existing data
                 flattened_new[0:flattened_length_data, ...] = self.data
+                # bring data to correct shape
                 self.data = np.reshape(flattened_new, self.shape)
 
 
