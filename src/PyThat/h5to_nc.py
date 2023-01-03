@@ -66,6 +66,13 @@ class MeasurementTree:
     def list_hdf5(self):
         print(self.f.visit(print))
 
+    @staticmethod
+    def save_file_from_string(obj, path):
+        try:
+            obj.to_netcdf(path)
+        except PermissionError:
+            obj.to_netcdf(str(path).encode('UTF-8'))
+
     def save_netcdf(self):
         self.array: xr.DataArray
         if self.index is not True:
@@ -80,10 +87,10 @@ class MeasurementTree:
                     self.dataset = self.dataset.chunk(**self.chunk)
                 elif self.chunk is True:
                     self.dataset = self.dataset.chunk(chunks='auto')
-            self.dataset.to_netcdf(self.save_path)
+            self.save_file_from_string(self.dataset, self.save_path)
             print('Saved dataset as {}'.format(self.save_path))
         elif self.array is not None:
-            self.array.to_netcdf(self.save_path)
+            self.save_file_from_string(self.dataset, self.save_path)
             print('Saved as {}'.format(self.save_path))
 
 
