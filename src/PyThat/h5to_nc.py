@@ -314,7 +314,7 @@ class MeasurementTree:
                 u['control name'] = key_control_name
                 control_keys.append(key_control_name)
                 u['units'] = unit
-
+            print(u)
         # print([u['units'] for u in self.definition.values() if 'units' in u])
 
         all_indicators = []
@@ -703,7 +703,8 @@ def consolidate_dims(array, name_includes, compare_to: str or None = None, new_d
     array = array.rename({temp_name: new_dim})
     return array
 
-
-
+# Add consolidate dims as methods to xarray.DataArray and xarray.Dataset
+xr.DataArray.consolidate_dims = consolidate_dims
+xr.Dataset.consolidate_dims = consolidate_dims
 
 
