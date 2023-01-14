@@ -1,10 +1,5 @@
 import xarray
 
-def foo(x):
-    print(x)
-
-xarray.DataArray.foo = foo
-xarray.Dataset.foo = foo
 
 def norm_on_FO(x, name='Frequency' ,f_max=2):
     """
