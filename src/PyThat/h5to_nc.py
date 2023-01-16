@@ -353,6 +353,7 @@ class MeasurementTree:
             coords = {}
             shape = []
             units = []
+            segments = []
 
             while parent is not None:
                 try:
@@ -387,7 +388,7 @@ class MeasurementTree:
                         if isinstance(self.definition[parent_row]['start'], list):
                             part = []
                             roi = []
-                            # TODO: Find a way to save this information for later use. Save list of steps in array.
+                            # TODO: Find a way to save ste for later use. Save list of steps in array.
                             for sta, sto, ste, eq in zip(self.definition[parent_row]['start'],
                                                          self.definition[parent_row]['stop'],
                                                          self.definition[parent_row]['steps'],
@@ -407,12 +408,14 @@ class MeasurementTree:
                 if row_data is not None:
                     coords[control_name] = row_data
                     units.append(unit)
+                    segments.append(roi)
                 parent_row = parent.parent_row
                 parent = parent.parent_group
 
             dims = list(coords.keys())
             units.reverse()
             dims.reverse()
+            segments.reverse()
 
             self.indicator_name, indicator_unit = self.get_units(self.indicator_name)
 
@@ -426,6 +429,7 @@ class MeasurementTree:
                     scales = self.get_scales(self.target[row][0], i)
                     coords[coord_name] = scales
                     dims.append(coord_name)
+                    segments.append(None)
                     unit = metadata['unit'][i]
                     units.append(unit)
             else:
@@ -434,6 +438,7 @@ class MeasurementTree:
                 for i, dat_shape in enumerate(data_shape):
                     coord_name = self.avoid_duplicate(coord_name, coords.keys())
                     coords[coord_name] = np.arange(dat_shape)
+                    segments.append(None)
                     dims.append(coord_name)
                     units.append('')
 
@@ -465,8 +470,9 @@ class MeasurementTree:
             print()
             self.array = xr.DataArray(self.data, dims=dims, coords=coords, name=self.indicator_name)
             # Add units to Attributes
-            for x, y in zip(dims, units):
+            for x, y, z in zip(dims, units, segments):
                 self.array[x].attrs['units'] = y
+                self.array[x].attrs['segments'] = z
             self.array.attrs['units'] = indicator_unit
             all_indicators.append(self.array)
 
