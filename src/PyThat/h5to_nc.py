@@ -41,6 +41,7 @@ class MeasurementTree:
         self.dataset = None
         self.metadata = {}
         self.attrs = None
+        self.eLab_meta = None
 
         if not override:
             try:
@@ -140,6 +141,7 @@ class MeasurementTree:
         self.devices = {i: self.convert_to_dict(k, truncate=True) for (i, k) in self.f['devices'].items()}
         self.labbook = {i: self.convert_to_dict(k) for (i, k) in self.f['labbook'].items()}
         self.logs = self.convert_to_dict(self.f['measurement/log'])
+        self.eLab_meta = self.get_elab_attrs()
         """
         ////////////////////////////////////////////////////////
         This reconstructs the multidimensional measurement tree.
@@ -236,7 +238,7 @@ class MeasurementTree:
                     pass
                 line = textwrap.indent(printout, ' '*2*int(j.tree_indent))
                 print_tree_list.append(line)
-                print(line)
+                # print(line)
         self.tree_string = '\n'.join(print_tree_list)
 
 
@@ -568,6 +570,19 @@ class MeasurementTree:
             return metadata
         except KeyError:
             return None
+
+    def get_elab_attrs(self, group: str = 'eLab') -> dict:
+        try:
+            group_dict = {key: value for key, value in self.f[group].attrs.items()}
+            for key, value in group_dict.items():
+                try:
+                    group_dict[key] = value.decode('UTF-8')
+                except AttributeError:
+                    pass
+        except AttributeError:
+            raise Warning('The eLab Group could not be found in the hdf5 file.')
+        return group_dict
+
 
     @staticmethod
     def check_for_sp_char(text):
