@@ -31,6 +31,10 @@ def slice_accumulate(x: xr.Dataset or xr.DataArray, edges: Dict[str, Iterable[fl
     return x
 
 
+xr.DataArray.slice_accumulate = slice_accumulate
+xr.DataSet.slice_accumulate = slice_accumulate
+
+
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     x = np.linspace(-5, 5, 11)
