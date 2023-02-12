@@ -20,11 +20,11 @@ from typing import Iterable, Dict
 def slice_accumulate(x: xr.Dataset or xr.DataArray, edges: Dict[str, Iterable[float]], method='sum'):
     for key, value in edges.items():
         coord_range_edges = list(zip(value, value[1::]))
-        coord_ranges = [slice(*pair, None) for pair in coord_range_edges]
+        coord_ranges = [slice(*edge_pair, None) for edge_pair in coord_range_edges]
         slices_one_dimension = [x.sel({key: coord_range}) for coord_range in coord_ranges]
-        if method=='mean':
+        if method == 'mean':
             slices_one_dimension = [el.mean(key) for el in slices_one_dimension]
-        elif method=='sum':
+        elif method == 'sum':
             slices_one_dimension = [el.sum(key) for el in slices_one_dimension]
         x = xr.concat(slices_one_dimension, key)
         x = x.assign_coords({key: [str(x) for x in coord_range_edges]})
