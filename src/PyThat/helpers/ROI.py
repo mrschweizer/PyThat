@@ -37,10 +37,10 @@ xr.DataSet.slice_accumulate = slice_accumulate
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
-    x = np.linspace(-5, 5, 11)
-    y = np.linspace(-7, 7, 15)
-    X, Y = np.meshgrid(x, y, indexing='ij')
-    Z = X**2+Y**2
-    array = xr.DataArray(Z, dims=('x', 'y'), coords={'x': x, 'y': y})
+    a = np.linspace(-5, 5, 11)
+    b = np.linspace(-7, 7, 15)
+    A, B = np.meshgrid(a, b, indexing='ij')
+    C = A**2+B**2
+    array = xr.DataArray(C, dims=('x', 'y'), coords={'x': a, 'y': b})
     slice_accumulate(array, {'x': [-5, -2, 3, 5], 'y': [-7, -4, 2, 5]}, method='mean').plot(x='x', y='y')
     plt.show()
