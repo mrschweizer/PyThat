@@ -44,5 +44,3 @@ if __name__ == '__main__':
     array = xr.DataArray(Z, dims=('x', 'y'), coords={'x': x, 'y': y})
     slice_accumulate(array, {'x': [-5, -2, 3, 5], 'y': [-7, -4, 2, 5]}, method='mean').plot(x='x', y='y')
     plt.show()
-
-#     monotone_divide(x, 'y')
