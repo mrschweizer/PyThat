@@ -316,7 +316,7 @@ class MeasurementTree:
                 u['control name'] = key_control_name
                 control_keys.append(key_control_name)
                 u['units'] = unit
-            print(u)
+            # print(u)
         # print([u['units'] for u in self.definition.values() if 'units' in u])
 
         all_indicators = []
