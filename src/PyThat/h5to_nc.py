@@ -572,15 +572,16 @@ class MeasurementTree:
             return None
 
     def get_elab_attrs(self, group: str = 'eLab') -> dict:
+        group_dict = {}
         try:
             group_dict = {key: value for key, value in self.f[group].attrs.items()}
             for key, value in group_dict.items():
                 try:
                     group_dict[key] = value.decode('UTF-8')
-                except AttributeError:
+                except KeyError:
                     pass
-        except AttributeError:
-            raise Warning('The eLab Group could not be found in the hdf5 file.')
+        except KeyError:
+            print('The eLab Group could not be found in the hdf5 file.')
         return group_dict
 
 
