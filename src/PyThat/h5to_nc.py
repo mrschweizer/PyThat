@@ -431,7 +431,7 @@ class MeasurementTree:
                     scales = self.get_scales(self.target[row][0], i)
                     coords[coord_name] = scales
                     dims.append(coord_name)
-                    segments.append(None)
+                    segments.append(float('nan'))
                     unit = metadata['unit'][i]
                     units.append(unit)
             else:
@@ -440,7 +440,7 @@ class MeasurementTree:
                 for i, dat_shape in enumerate(data_shape):
                     coord_name = self.avoid_duplicate(coord_name, coords.keys())
                     coords[coord_name] = np.arange(dat_shape)
-                    segments.append(None)
+                    segments.append(float('nan'))
                     dims.append(coord_name)
                     units.append('')
 
