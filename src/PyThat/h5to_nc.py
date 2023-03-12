@@ -137,9 +137,9 @@ class MeasurementTree:
 
 
     def construct_tree(self):
-        self.definition = {i: self.convert_to_dict(k) for (i, k) in self.f['scan_definition'].items()}
-        self.devices = {i: self.convert_to_dict(k, truncate=True) for (i, k) in self.f['devices'].items()}
-        self.labbook = {i: self.convert_to_dict(k) for (i, k) in self.f['labbook'].items()}
+        self.definition = {self.check_for_sp_char(i): self.convert_to_dict(k) for (i, k) in self.f['scan_definition'].items()}
+        self.devices = {self.check_for_sp_char(i): self.convert_to_dict(k, truncate=True) for (i, k) in self.f['devices'].items()}
+        self.labbook = {self.check_for_sp_char(i): self.convert_to_dict(k) for (i, k) in self.f['labbook'].items()}
         self.logs = self.convert_to_dict(self.f['measurement/log'])
         self.eLab_meta = self.get_elab_attrs()
         """
@@ -491,14 +491,7 @@ class MeasurementTree:
             print('Metadata has not been initialized.')
         from json import dumps
         for attr, val in self.attrs.items():
-            try:
-                self.dataset.attrs[attr] = dumps(val)
-            except TypeError:
-                print(f'Something went wrong. "{attr}" could not be saved')
-            # if isinstance(val, dict):
-            #     self.dataset.attrs[attr] = dumps(val)
-            # elif isinstance(val, str):
-            #     self.dataset.attrs[attr] = dumps(val)
+            self.dataset.attrs[attr] = dumps(val)
 
     def print_metadata(self, metadata):
         """
@@ -580,7 +573,7 @@ class MeasurementTree:
             group_dict = {key: value for key, value in self.f[group].attrs.items()}
             for key, value in group_dict.items():
                 try:
-                    group_dict[key] = value.decode('UTF-8')
+                    group_dict[key] = value
                 except KeyError:
                     pass
         except KeyError:
@@ -592,6 +585,7 @@ class MeasurementTree:
     def check_for_sp_char(text):
         import re
         special_char = re.compile(r"%%%(\d+)%%%")
+        text = str(text)
         res = special_char.finditer(text)
         for v in res:
             text = text.replace(v.group(), chr(int(v.group(1))))
