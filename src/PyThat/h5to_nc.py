@@ -491,7 +491,10 @@ class MeasurementTree:
             print('Metadata has not been initialized.')
         from json import dumps
         for attr, val in self.attrs.items():
-            self.dataset.attrs[attr] = dumps(val)
+            try:
+                self.dataset.attrs[attr] = dumps(val)
+            except TypeError:
+                print(f'Something went wrong. "{attr}" could not be saved')
             # if isinstance(val, dict):
             #     self.dataset.attrs[attr] = dumps(val)
             # elif isinstance(val, str):
