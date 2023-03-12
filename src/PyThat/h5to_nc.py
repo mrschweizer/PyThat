@@ -263,7 +263,6 @@ class MeasurementTree:
             possible_indicators = [self.index]
             print(f'Only one index selected: {possible_indicators[0]}')
 
-
         # create array with all core-data names
         # create self.metadata
         core_data_names = []
