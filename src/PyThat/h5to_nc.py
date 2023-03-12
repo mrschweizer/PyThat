@@ -374,15 +374,18 @@ class MeasurementTree:
                 # if self.definition[parent_row]['function'] in ['scalar control']:
 
                 row_data = None
+                roi = None
                 try:
                     row_data = parent.get_data()
                     # Add shape of dimension to shape list
                     shape.append(row_data.shape[0])
+                    roi = [len(row_data)]
                     # Add control name as key to the coords dict. Assign data to that key.
                 except KeyError as err:
                     if self.definition[parent_row]['function'] == 'internal - repetitions':
                         print('Repetitions. Generating incrementing as coords.')
                         rep = int(self.definition[parent_row]['repetitions'])
+                        roi = [rep]
                         shape.append(rep)
                         row_data = np.arange(rep)
                     elif self.definition[parent_row]['function'] == 'scalar control':
@@ -410,7 +413,8 @@ class MeasurementTree:
                 if row_data is not None:
                     coords[control_name] = row_data
                     units.append(unit)
-                    segments.append(roi)
+                    if roi is not None:
+                        segments.append(roi)
                 parent_row = parent.parent_row
                 parent = parent.parent_group
 
@@ -431,7 +435,7 @@ class MeasurementTree:
                     scales = self.get_scales(self.target[row][0], i)
                     coords[coord_name] = scales
                     dims.append(coord_name)
-                    segments.append(float('nan'))
+                    segments.append([len(scales)])
                     unit = metadata['unit'][i]
                     units.append(unit)
             else:
@@ -449,6 +453,7 @@ class MeasurementTree:
             self.shape = tuple(shape)+data_shape
             try:
                 self.data = np.reshape(self.data, self.shape)
+                print(f'Desired shape: {self.shape}, data shape: {self.data.shape}, size: {self.data.size}')
             except ValueError:
                 # TODO: Find a way to drop empty slices
                 print('Measurement not finished?')
@@ -477,6 +482,7 @@ class MeasurementTree:
                 self.array[x].attrs['segments'] = z
             self.array.attrs['units'] = indicator_unit
             all_indicators.append(self.array)
+            print(f'Segments: {segments}')
 
         self.dataset = xr.combine_by_coords(all_indicators)
 
