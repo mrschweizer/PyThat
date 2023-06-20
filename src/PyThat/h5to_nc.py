@@ -135,6 +135,8 @@ class MeasurementTree:
 
     def construct_tree(self):
         self.definition = {self.check_for_sp_char(i): self.convert_to_dict(k) for (i, k) in self.f['scan_definition'].items()}
+        if 'tree_view' in self.definition.keys():
+            del(self.definition['tree_view'])
         self.devices = {self.check_for_sp_char(i): self.convert_to_dict(k, truncate=True) for (i, k) in self.f['devices'].items()}
         self.labbook = {self.check_for_sp_char(i): self.convert_to_dict(k) for (i, k) in self.f['labbook'].items()}
         self.logs = self.convert_to_dict(self.f['measurement/log'])
