@@ -22,7 +22,8 @@ def mask_FO(x, dim=None, f_max=2):
     """
     return x.where(abs(x[dim]) >= f_max)
 
-def substract_background(x, y, dim=None, f_max=2, f_min = None):
+
+def subtract_background(x, y, dim=None, f_max=2, f_min = None):
     """
     Use a reference measurement to substract the background. Background is renormalized to match the intensity of the
     main measurement in the specified interval and then substracted from the main. Can be used to substract things such
@@ -44,5 +45,5 @@ xarray.DataArray.norm_on_FO = norm_on_FO
 xarray.Dataset.norm_on_FO = norm_on_FO
 xarray.DataArray.mask_FO = mask_FO
 xarray.Dataset.mask_FO = mask_FO
-xarray.DataArray.substract_background = substract_background
-xarray.Dataset.substract_background = substract_background
+xarray.DataArray.subtract_background = subtract_background
+xarray.Dataset.subtract_background = subtract_background
