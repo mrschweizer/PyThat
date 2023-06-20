@@ -94,7 +94,6 @@ class MeasurementTree:
             self.save_file_from_string(self.dataset, self.save_path)
             print('Saved as {}'.format(self.save_path))
 
-
     def open_netcdf(self):
         """This function opens the expected output netcdf if it exists.\n
         Otherwise save_netcdf() is called to create such a file."""
@@ -133,8 +132,6 @@ class MeasurementTree:
                           'scan_definition': self.definition}
         except KeyError:
             print('Metadata not found. It will not be available.')
-
-
 
     def construct_tree(self):
         self.definition = {self.check_for_sp_char(i): self.convert_to_dict(k) for (i, k) in self.f['scan_definition'].items()}
@@ -243,7 +240,6 @@ class MeasurementTree:
                 # print(line)
         self.tree_string = '\n'.join(print_tree_list)
 
-
         """User Input Index"""
         if self.index is None:
             # Get and parse user input for group and entry for self.target and self.index
@@ -268,7 +264,6 @@ class MeasurementTree:
             # override possible_indicators, if index is specified
             possible_indicators = [self.index]
             print(f'Only one index selected: {possible_indicators[0]}')
-
 
         # create array with all core-data names
         # create self.metadata
@@ -426,7 +421,6 @@ class MeasurementTree:
             segments.reverse()
 
             self.indicator_name, indicator_unit = self.get_units(self.indicator_name)
-
 
             # iterate over metadata to innermost data to get names of all dimensions
             metadata = self.metadata[self.target[row][0]]
@@ -588,7 +582,6 @@ class MeasurementTree:
             print('The eLab Group could not be found in the hdf5 file.')
         return group_dict
 
-
     @staticmethod
     def check_for_sp_char(text):
         import re
@@ -730,8 +723,7 @@ def consolidate_dims(array, name_includes, compare_to: str or None = None, new_d
     array = array.rename({temp_name: new_dim})
     return array
 
+
 # Add consolidate dims as methods to xarray.DataArray and xarray.Dataset
 xr.DataArray.consolidate_dims = consolidate_dims
 xr.Dataset.consolidate_dims = consolidate_dims
-
-
