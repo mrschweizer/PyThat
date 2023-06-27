@@ -32,7 +32,7 @@ def slice_accumulate(x: xr.Dataset or xr.DataArray, edges: Dict[str, Iterable[fl
 
 
 xr.DataArray.slice_accumulate = slice_accumulate
-xr.DataSet.slice_accumulate = slice_accumulate
+xr.Dataset.slice_accumulate = slice_accumulate
 
 
 if __name__ == '__main__':
