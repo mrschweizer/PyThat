@@ -40,6 +40,19 @@ def subtract_background(x, y, dim=None, f_max=2, f_min = None):
     norm = x.sel({dim: slice(f_min, f_max)}).sum(dim)
     return x - y/y.sel({dim: slice(f_min, f_max)}).sum(dim)*norm
 
+def mask_all_zeros(x, dims, value=0):
+    """
+    Function that returns NAN, when all values in the space spun by dims have the same value as value.
+    :param x: Xarray.DataArray or xarray.Dataset
+    :param dims: Iterable of Hashable
+    :param value: The value which is to be filtered.
+    :return: The input data where spaces in which all values equal value are replaces by NAN.
+    """
+    mask = (x == value)
+    for dim in dims:
+        mask = mask.all(dim)
+    return x.where(~mask)
+
 
 xarray.DataArray.norm_on_FO = norm_on_FO
 xarray.Dataset.norm_on_FO = norm_on_FO
@@ -47,3 +60,5 @@ xarray.DataArray.mask_FO = mask_FO
 xarray.Dataset.mask_FO = mask_FO
 xarray.DataArray.subtract_background = subtract_background
 xarray.Dataset.subtract_background = subtract_background
+xarray.DataArray.mask_all_zeros = mask_all_zeros
+xarray.Dataset.mask_all_zeros = mask_all_zeros
