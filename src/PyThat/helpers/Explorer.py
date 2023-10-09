@@ -291,7 +291,11 @@ class Explorer:
     def load(self):
         with open('ROI.sl', 'rb') as f:
             self.record = load(f)
-        print(self.record)
+        key = list(self.record.keys())[0]
+        self.hyper_slice = self.record[key]
+        self.control_window._select(key)
+        self.update_plots()
+        return list(self.record.keys())
 
     def select(self, label):
         self.hyper_slice = self.record[label]
@@ -329,20 +333,23 @@ class ControlWindow:
 
     def _capture(self, event):
         keys = self.capture(self.caption.text)
+        self._update_selector(keys)
+        self.fig.canvas.draw()
+
+    def _update_selector(self, keys):
         if self.axes['selector'] is None:
             self.axes['selector'] = self.fig.add_subplot(self.grid[0:, 1])
         else:
             self.axes['selector'].clear()
-        self.selector = RadioButtons(self.axes['selector'], list(keys))
+        self.selector = RadioButtons(self.axes['selector'], list(keys), active=len(keys)-1)
         self.selector.on_clicked(self._select)
-        self.fig.canvas.draw()
-
 
     def _save(self, event):
         self.save()
 
     def _load(self, event):
-        self.load()
+        keys = self.load()
+        self._update_selector(keys)
 
     def _select(self, event):
         self.select(event)
