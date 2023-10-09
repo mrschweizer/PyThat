@@ -1,8 +1,14 @@
+import matplotlib.gridspec
 from matplotlib.widgets import RectangleSelector
 import numpy as np
 import matplotlib.pyplot as plt
 from itertools import combinations
 from matplotlib.widgets import Button
+from matplotlib.widgets import CheckButtons
+from matplotlib.colors import LogNorm
+from matplotlib.colors import Normalize
+from matplotlib.widgets import TextBox
+from pickle import dump, load
 
 class SlicePlot1D:
     def __init__(self, da, dim, update_method, orientation, plot_kwargs=None):
@@ -18,6 +24,13 @@ class SlicePlot1D:
         self.autoscale = True
         self.orientation = orientation
         self.update_method = update_method
+
+        self.log = False
+        self.fig.subplots_adjust(bottom=0.2)
+        self.ax_check_log = self.fig.add_axes([0.15, 0.05, 0.075, 0.075])
+        self.check_log = CheckButtons(ax=self.ax_check_log, labels=['Log'])
+        self.check_log.on_clicked(self.on_click_log)
+
         plot_orientation = {orientation: dim}
         self.plot = self.reduced_da().plot(ax=self.ax, **plot_orientation) #, **plot_kwargs
 
@@ -26,15 +39,33 @@ class SlicePlot1D:
         x_data = data[self.dim].data
         y_data = data.data
         self.ax.autoscale_view()
+        if self.log:
+            min = data.where(data>0).min()
+        else:
+            min = data.min()
         if self.orientation == 'x':
             self.plot[0].set_data(x_data, y_data)
             if self.autoscale:
-                self.ax.set_ylim(data.min(),data.max())
+                self.ax.set_ylim(min, data.max())
         elif self.orientation == 'y':
             self.plot[0].set_data(y_data, x_data)
             if self.autoscale:
-                self.ax.set_xlim(data.min(), data.max())
+                self.ax.set_xlim(min, data.max())
         self.fig.canvas.draw()
+
+    def on_click_log(self, label):
+        f = {'x': self.ax.set_yscale, 'y': self.ax.set_xscale}[self.orientation]
+
+        if not self.log:
+            self.log = True
+            f('log')
+        elif self.log:
+            print('linear')
+            self.log = False
+            f('linear')
+
+        self.update_plot()
+
 
     def reduced_da(self):
         # TODO: Offer multiple reduce methods
@@ -51,7 +82,7 @@ class SlicePlot1D:
 
 class SlicePlot:
     def __init__(self, da, ax, x_dim, y_dim, update_method, fig=None, plot_kwargs=None):
-        # fig.canvas.mpl_connect('motion_notify_event', cursor.on_mouse_move)
+        fig.canvas.mpl_connect('key_press_event', self.on_key_press)
         if plot_kwargs is None:
             plot_kwargs = {}
         self.ax = ax
@@ -75,6 +106,11 @@ class SlicePlot:
         self.b_yline.on_clicked(self.on_click_yline)
         self.spy = None
 
+        self.log_color = False
+        self.ax_check_log_color = self.fig.add_axes([0.4, 0.05, 0.075, 0.075])
+        self.check_log = CheckButtons(ax=self.ax_check_log_color, labels=['Log Color'])
+        self.check_log.on_clicked(self.on_click_log_color)
+
 
         # self.da.plot.pcolormesh(x=x_dim, y=y_dim, ax=ax, **plot_kwargs)
         self.RS = RectangleSelector(self.ax, self.line_select_callback,
@@ -82,7 +118,8 @@ class SlicePlot:
                                     button=[1, 3],  # don't use middle button
                                     minspanx=5, minspany=5,
                                     spancoords='pixels',
-                                    interactive=True)
+                                    interactive=True,
+                                    props=dict(facecolor='red', edgecolor='black', alpha=0.05, fill=True))
         self.set_rectangle(self.update_method())
 
     def reduced_da(self):
@@ -110,6 +147,18 @@ class SlicePlot:
         self.spy.ax.sharey(self.ax)
         plt.show()
 
+    def on_click_log_color(self, label):
+        if self.log_color:
+            self.log_color = False
+            norm = Normalize()
+            self.plot.set_norm(norm)
+        elif ~self.log_color:
+            self.log_color = True
+            norm = LogNorm()
+            self.plot.set_norm(norm)
+        self.update_plot()
+        print(self.log_color)
+
     def update_plot(self):
         data = self.reduced_da().transpose(self.y_dim, self.x_dim).data
         self.plot.set_array(data)
@@ -125,8 +174,6 @@ class SlicePlot:
         x1, y1 = eclick.xdata, eclick.ydata
         x2, y2 = erelease.xdata, erelease.ydata
         sl = self.update_method({self.x_dim: slice(x1, x2), self.y_dim: slice(y1, y2)})
-        # print("(%3.2f, %3.2f) --> (%3.2f, %3.2f)" % (x1, y1, x2, y2))
-        # print(" The button you used were: %s %s" % (eclick.button, erelease.button))
 
     def set_rectangle(self, sl):
         old_extents = self.RS.extents
@@ -140,6 +187,25 @@ class SlicePlot:
                 extents.append(j)
         self.RS.extents = tuple(extents)
         self.update_plot()
+
+    def on_key_press(self, event):
+        key = event.key
+        print(key)
+        if key in ['ctrl+up', 'ctrl+down', 'ctrl+left', 'ctrl+right']:
+            # sl = self.update_method(None)
+            ex = self.RS.extents
+            dx = (ex[1]-ex[0])/2
+            dy = (ex[3] - ex[2])/2
+            if key == 'ctrl+right':
+                self.RS.extents = ex[0]+dx, ex[1]+dx, ex[2], ex[3]
+            elif key == 'ctrl+left':
+                self.RS.extents = ex[0]-dx, ex[1]-dx, ex[2], ex[3]
+            elif key == 'ctrl+up':
+                self.RS.extents = ex[0], ex[1], ex[2]+dy, ex[3]+dy
+            elif key == 'ctrl+down':
+                self.RS.extents = ex[0], ex[1], ex[2]-dy, ex[3]-dy
+            ex = self.RS.extents
+            sl = self.update_method({self.x_dim: slice(ex[0], ex[1]), self.y_dim: slice(ex[2], ex[3])})
 
 
 
@@ -163,16 +229,35 @@ class Explorer:
             else:
                 self.hyper_slice[x] = slice(None, None)
 
-        print(self.plot_axes)
+        self.record = {}
+        self.control_window = ControlWindow(self.record)
+        self.control_window.close_all = self.close_all
+        self.control_window.capture = self.capture
+        self.control_window.save = self.save
+        self.control_window.load = self.load
+
         self.axes = []
         for (y_dim, x_dim) in self.plot_axes:
             fig, ax = plt.subplots()
+            print(y_dim, x_dim)
             for q in self.axes:
+                print(self.axes)
                 if q.y_dim == y_dim:
-                    ax.sharey(q.ax)
+                    try:
+                        q.ax.sharey(ax)
+                    except ValueError:
+                        pass
                 if q.x_dim == x_dim:
-                    ax.sharex(q.ax)
+                    try:
+                        q.ax.sharex(ax)
+                    except ValueError:
+                        pass
+                print('yep')
             self.axes.append(SlicePlot(da, ax, x_dim, y_dim, self.update, fig=fig, plot_kwargs=plot_kwargs))
+
+    def close_all(self, event):
+        for x in self.axes:
+            plt.close(x.fig)
 
     def update(self, sl=None):
         """
@@ -185,3 +270,56 @@ class Explorer:
             for x in self.axes:
                 x.set_rectangle(self.hyper_slice)
         return self.hyper_slice
+
+    def capture(self, label):
+        self.record[label] = self.hyper_slice
+        print(self.record)
+
+    def save(self):
+        with open('ROI.sl', 'wb') as f:
+            dump(self.record, f)
+
+    def load(self):
+        with open('ROI.sl', 'rb') as f:
+            self.record = load(f)
+        print(self.record)
+
+
+
+class ControlWindow:
+    def __init__(self, record):
+        self.record = record
+        record['test'] = 1
+        self.fig = plt.figure(figsize=(1, 3))
+        self.capture = self.not_set
+        self.save = self.not_set
+        self.load = self.not_set
+        self.close_all = self.not_set
+
+        self.buttons = {'Capture': self._capture, 'Save': self._save, 'Load': self._load, 'Close all': self._close_all}
+        self.axes = self.buttons.copy()
+
+        self.grid = self.fig.add_gridspec(len(self.buttons)+1, 1)
+        for i, label in enumerate(self.buttons.keys()):
+            f = self.buttons[label]
+            self.axes[label] = self.fig.add_subplot(self.grid[i, 0])
+            self.buttons[label] = Button(self.axes[label], label=label)
+            self.buttons[label].on_clicked(f)
+        self.axes['label'] = self.fig.add_subplot(self.grid[-1, 0])
+        self.caption = TextBox(self.axes['label'], '', initial='Enter slice label')
+
+    def not_set(self, *args, **kwargs):
+        print('This function has not been set.')
+
+    def _capture(self, event):
+        self.capture(self.caption.text)
+
+    def _save(self, event):
+        self.save()
+
+    def _load(self, event):
+        self.load()
+
+    def _close_all(self, event):
+        self.close_all(event)
+        plt.close(self.fig)
