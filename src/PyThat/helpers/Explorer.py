@@ -9,6 +9,7 @@ from matplotlib.colors import LogNorm
 from matplotlib.colors import Normalize
 from matplotlib.widgets import TextBox
 from pickle import dump, load
+from matplotlib.widgets import RadioButtons
 
 class SlicePlot1D:
     def __init__(self, da, dim, update_method, orientation, plot_kwargs=None):
@@ -235,6 +236,7 @@ class Explorer:
         self.control_window.capture = self.capture
         self.control_window.save = self.save
         self.control_window.load = self.load
+        self.control_window.select = self.select
 
         self.axes = []
         for (y_dim, x_dim) in self.plot_axes:
@@ -271,9 +273,16 @@ class Explorer:
                 x.set_rectangle(self.hyper_slice)
         return self.hyper_slice
 
+    def update_plots(self):
+        for x in self.axes:
+            x.update_plot()
+        for x in self.axes:
+            x.set_rectangle(self.hyper_slice)
+
     def capture(self, label):
-        self.record[label] = self.hyper_slice
+        self.record[label] = self.hyper_slice.copy()
         print(self.record)
+        return self.record.keys()
 
     def save(self):
         with open('ROI.sl', 'wb') as f:
@@ -284,41 +293,59 @@ class Explorer:
             self.record = load(f)
         print(self.record)
 
+    def select(self, label):
+        self.hyper_slice = self.record[label]
+        print(label)
+        self.update_plots()
 
 
 class ControlWindow:
     def __init__(self, record):
         self.record = record
-        record['test'] = 1
-        self.fig = plt.figure(figsize=(1, 3))
+        self.fig = plt.figure(figsize=(3, 3))
         self.capture = self.not_set
         self.save = self.not_set
         self.load = self.not_set
         self.close_all = self.not_set
+        self.select = self.not_set
 
         self.buttons = {'Capture': self._capture, 'Save': self._save, 'Load': self._load, 'Close all': self._close_all}
         self.axes = self.buttons.copy()
 
-        self.grid = self.fig.add_gridspec(len(self.buttons)+1, 1)
+        self.grid = self.fig.add_gridspec(len(self.buttons)+1, 2)
         for i, label in enumerate(self.buttons.keys()):
             f = self.buttons[label]
             self.axes[label] = self.fig.add_subplot(self.grid[i, 0])
             self.buttons[label] = Button(self.axes[label], label=label)
             self.buttons[label].on_clicked(f)
         self.axes['label'] = self.fig.add_subplot(self.grid[-1, 0])
-        self.caption = TextBox(self.axes['label'], '', initial='Enter slice label')
+        self.caption = TextBox(self.axes['label'], '', initial='label')
+        self.axes['selector'] = None
+        self.selector = None
+        # self.selector.on_clicked(self._select)
 
     def not_set(self, *args, **kwargs):
         print('This function has not been set.')
 
     def _capture(self, event):
-        self.capture(self.caption.text)
+        keys = self.capture(self.caption.text)
+        if self.axes['selector'] is None:
+            self.axes['selector'] = self.fig.add_subplot(self.grid[0:, 1])
+        else:
+            self.axes['selector'].clear()
+        self.selector = RadioButtons(self.axes['selector'], list(keys))
+        self.selector.on_clicked(self._select)
+        self.fig.canvas.draw()
+
 
     def _save(self, event):
         self.save()
 
     def _load(self, event):
         self.load()
+
+    def _select(self, event):
+        self.select(event)
 
     def _close_all(self, event):
         self.close_all(event)
