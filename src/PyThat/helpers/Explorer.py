@@ -211,7 +211,8 @@ class SlicePlot:
 
 
 class Explorer:
-    def __init__(self, da, cuts='minimal', plot_kwargs=None):
+    def __init__(self, da, cuts='minimal', save_path = 'ROI.sl', plot_kwargs=None):
+        self.save_path = save_path
         if plot_kwargs is None:
             plot_kwargs = {}
         self.da = da
@@ -285,11 +286,11 @@ class Explorer:
         return self.record.keys()
 
     def save(self):
-        with open('ROI.sl', 'wb') as f:
+        with open(self.save_path, 'wb') as f:
             dump(self.record, f)
 
     def load(self):
-        with open('ROI.sl', 'rb') as f:
+        with open(self.save_path, 'rb') as f:
             self.record = load(f)
         key = list(self.record.keys())[0]
         self.hyper_slice = self.record[key]
