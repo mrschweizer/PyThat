@@ -96,27 +96,36 @@ class SlicePlot:
         self.fig = fig
         # print(dir(self.fig.canvas.manager))
         self.fig.canvas.manager.set_window_title(f'Explorer: {y_dim} vs. {x_dim}')
-        self.fig.subplots_adjust(bottom=0.2)
+        self.fig.subplots_adjust(bottom=0.28)
         self.update_method = update_method
         self.x_dim = x_dim
         self.y_dim = y_dim
         self.plot = self.reduced_da().plot(x=x_dim, y=y_dim, **plot_kwargs)
 
         self.ax_xline = self.fig.add_axes([0.15, 0.05, 0.075, 0.075])
-        self.b_xline = Button(self.ax_xline, f'{self.x_dim} line')
+        self.b_xline = Button(self.ax_xline, f'x line')
         self.b_xline.on_clicked(self.on_click_xline)
         self.spx = None
 
         self.ax_yline = self.fig.add_axes([0.25, 0.05, 0.075, 0.075])
-        self.b_yline = Button(self.ax_yline, f'{self.y_dim} line')
+        self.b_yline = Button(self.ax_yline, f'y line')
         self.b_yline.on_clicked(self.on_click_yline)
         self.spy = None
 
         self.log_color = False
-        self.ax_check_log_color = self.fig.add_axes([0.4, 0.05, 0.075, 0.075])
+        self.ax_check_log_color = self.fig.add_axes([0.35, 0.05, 0.15, 0.075])
         self.check_log = CheckButtons(ax=self.ax_check_log_color, labels=['Log Color', 'Autoscale'], actives=[False,True])
         self.check_log.on_clicked(self.on_click_log_color)
         self.autoscale = True
+
+        self.ax_lowerlimits = self.fig.add_axes([0.55, 0.05, 0.125, 0.075])
+        self.text_lower = TextBox(self.ax_lowerlimits, '', initial='label')
+        self.text_lower.on_submit(self.update_color_limits)
+        self.ax_upperlimits = self.fig.add_axes([0.7, 0.05, 0.125, 0.075])
+        self.text_upper = TextBox(self.ax_upperlimits, '', initial='label')
+        self.text_upper.on_submit(self.update_color_limits)
+
+        self.fig.canvas.mpl_connect('scroll_event', self.on_scroll)
 
 
         # self.da.plot.pcolormesh(x=x_dim, y=y_dim, ax=ax, **plot_kwargs)
@@ -174,6 +183,9 @@ class SlicePlot:
     def update_plot(self):
         data = self.reduced_da().transpose(self.y_dim, self.x_dim).data
         self.plot.set_array(data)
+        lower, upper = self.plot.get_clim()
+        self.text_lower.set_val(f'{lower:.2e}')
+        self.text_upper.set_val(f'{upper:.2e}')
         if self.autoscale:
             self.plot.autoscale()
         self.fig.canvas.draw()
@@ -181,6 +193,20 @@ class SlicePlot:
             self.spx.update_plot()
         if self.spy is not None:
             self.spy.update_plot()
+
+    def update_color_limits(self, event):
+        try:
+            upper, lower = float(self.text_upper.text), float(self.text_lower.text)
+            self.plot.set_clim(lower, upper)
+            self.update_plot()
+        except ValueError:
+            print('The entered value was not a valid float')
+
+
+    def on_scroll(self, event):
+        print(self.plot.get_clim())
+        print(event.button)
+        print(event.step)
 
     def line_select_callback(self, eclick, erelease):
         'eclick and erelease are the press and release events'
