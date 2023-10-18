@@ -448,6 +448,7 @@ class MeasurementTree:
             shape.reverse()
             self.shape = tuple(shape)+data_shape
             try:
+                # TODO: Is there a way to reshape using dask?
                 self.data = np.reshape(self.data, self.shape)
                 print(f'Desired shape: {self.shape}, data shape: {self.data.shape}, size: {self.data.size}')
             except ValueError:
@@ -464,7 +465,7 @@ class MeasurementTree:
                 # initialize flattened with nan
                 flattened_new = np.empty(flattened_shape)
                 flattened_new[...] = np.nan
-                # write existing override nans with existing data
+                # write existing, override nans with existing data
                 flattened_new[0:flattened_length_data, ...] = self.data
                 # bring data to correct shape
                 self.data = np.reshape(flattened_new, self.shape)
@@ -530,8 +531,9 @@ class MeasurementTree:
         data_shape = self.data.shape[1:][index]
         try:
             scale_specs = np.array(self.f['measurement/' + row + '/scale']).reshape(scale_shape)[0, index, :]
-            stop = data_shape*scale_specs[1] + scale_specs[0]
-            scales = np.linspace(scale_specs[0], stop, data_shape)
+            # stop = data_shape*scale_specs[1] + scale_specs[0]
+            # scales = np.linspace(scale_specs[0], stop, data_shape)
+            scales = np.arange(data_shape)*scale_specs[1]+scale_specs[0]
             return scales
         except KeyError:
             print('No scales found.')
