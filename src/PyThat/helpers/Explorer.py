@@ -29,7 +29,7 @@ class SlicePlot1D:
         self.log = False
         self.fig.subplots_adjust(bottom=0.2)
         self.ax_check_log = self.fig.add_axes([0.15, 0.05, 0.075, 0.075])
-        self.check_log = CheckButtons(ax=self.ax_check_log, labels=['Log'])
+        self.check_log = CheckButtons(ax=self.ax_check_log, labels=['Log', 'Autoscale'])
         self.check_log.on_clicked(self.on_click_log)
 
         plot_orientation = {orientation: dim}
@@ -56,14 +56,19 @@ class SlicePlot1D:
 
     def on_click_log(self, label):
         f = {'x': self.ax.set_yscale, 'y': self.ax.set_xscale}[self.orientation]
-
-        if not self.log:
-            self.log = True
-            f('log')
-        elif self.log:
-            print('linear')
-            self.log = False
-            f('linear')
+        if label == 'Log':
+            if not self.log:
+                self.log = True
+                f('log')
+            elif self.log:
+                print('linear')
+                self.log = False
+                f('linear')
+        elif label == 'Autoscale':
+            if self.autoscale:
+                self.autoscale = False
+            else:
+                self.autoscale = True
 
         self.update_plot()
 
@@ -109,8 +114,9 @@ class SlicePlot:
 
         self.log_color = False
         self.ax_check_log_color = self.fig.add_axes([0.4, 0.05, 0.075, 0.075])
-        self.check_log = CheckButtons(ax=self.ax_check_log_color, labels=['Log Color'])
+        self.check_log = CheckButtons(ax=self.ax_check_log_color, labels=['Log Color', 'Autoscale'])
         self.check_log.on_clicked(self.on_click_log_color)
+        self.autoscale = True
 
 
         # self.da.plot.pcolormesh(x=x_dim, y=y_dim, ax=ax, **plot_kwargs)
@@ -149,16 +155,21 @@ class SlicePlot:
         plt.show()
 
     def on_click_log_color(self, label):
-        if self.log_color:
-            self.log_color = False
-            norm = Normalize()
-            self.plot.set_norm(norm)
-        elif ~self.log_color:
-            self.log_color = True
-            norm = LogNorm()
-            self.plot.set_norm(norm)
+        if label == 'Log':
+            if self.log_color:
+                self.log_color = False
+                norm = Normalize()
+                self.plot.set_norm(norm)
+            elif ~self.log_color:
+                self.log_color = True
+                norm = LogNorm()
+                self.plot.set_norm(norm)
+        elif label == 'Autoscale':
+            if self.autoscale:
+                self.autoscale = False
+            else:
+                self.autoscale = True
         self.update_plot()
-        print(self.log_color)
 
     def update_plot(self):
         data = self.reduced_da().transpose(self.y_dim, self.x_dim).data
