@@ -29,7 +29,7 @@ class SlicePlot1D:
         self.log = False
         self.fig.subplots_adjust(bottom=0.2)
         self.ax_check_log = self.fig.add_axes([0.15, 0.05, 0.075, 0.075])
-        self.check_log = CheckButtons(ax=self.ax_check_log, labels=['Log', 'Autoscale'])
+        self.check_log = CheckButtons(ax=self.ax_check_log, labels=['Log', 'Autoscale'], actives=[False, True])
         self.check_log.on_clicked(self.on_click_log)
 
         plot_orientation = {orientation: dim}
@@ -114,7 +114,7 @@ class SlicePlot:
 
         self.log_color = False
         self.ax_check_log_color = self.fig.add_axes([0.4, 0.05, 0.075, 0.075])
-        self.check_log = CheckButtons(ax=self.ax_check_log_color, labels=['Log Color', 'Autoscale'])
+        self.check_log = CheckButtons(ax=self.ax_check_log_color, labels=['Log Color', 'Autoscale'], actives=[False,True])
         self.check_log.on_clicked(self.on_click_log_color)
         self.autoscale = True
 
@@ -155,7 +155,7 @@ class SlicePlot:
         plt.show()
 
     def on_click_log_color(self, label):
-        if label == 'Log':
+        if label == 'Log Color':
             if self.log_color:
                 self.log_color = False
                 norm = Normalize()
@@ -174,7 +174,8 @@ class SlicePlot:
     def update_plot(self):
         data = self.reduced_da().transpose(self.y_dim, self.x_dim).data
         self.plot.set_array(data)
-        self.plot.autoscale()
+        if self.autoscale:
+            self.plot.autoscale()
         self.fig.canvas.draw()
         if self.spx is not None:
             self.spx.update_plot()
