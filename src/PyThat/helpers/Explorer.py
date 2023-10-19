@@ -10,15 +10,29 @@ from matplotlib.colors import Normalize
 from matplotlib.widgets import TextBox
 from pickle import dump, load
 from matplotlib.widgets import RadioButtons
+from xarray import DataArray
+from xarray import Dataset
+from xarray import broadcast
+from xarray import merge
+import xarray as xr
 
 class SlicePlot1D:
-    def __init__(self, da, dim, update_method, orientation, plot_kwargs=None):
+    def __init__(self, da, dim, update_method, orientation, var=None, plot_kwargs=None):
         if plot_kwargs is not None:
             self.plot_kwargs = plot_kwargs.copy()
         else:
             self.plot_kwargs = {}
         print(self.plot_kwargs)
-        self.da = da
+        self.var = var
+        if isinstance(da, DataArray):
+            self.mode = 'da'
+            self.da = da
+        elif isinstance(da, Dataset) and var is not None:
+            self.mode = 'ds'
+            self.da = da[var]
+            self.ds = da
+        else:
+            raise TypeError('da must be an xarray DataArray or Dataset')
         self.fig, self.ax = plt.subplots()
         self.fig.canvas.manager.set_window_title(f'Explorer: {dim}-line')
         self.dim = dim
@@ -33,25 +47,87 @@ class SlicePlot1D:
         self.check_log.on_clicked(self.on_click_log)
 
         plot_orientation = {orientation: dim}
-        self.plot = self.reduced_da().plot(ax=self.ax, **plot_orientation) #, **plot_kwargs
+        if self.mode == 'da':
+            self.plot = self.reduced_da().plot(ax=self.ax, **plot_orientation) #, **plot_kwargs
+        elif self.mode == 'ds':
+            self.ds = self.init_ds(self.ds, self.var)
+            test = merge(self.format_ds()).to_array()
+            self.plot = test.plot(ax=self.ax, hue='variable', **plot_orientation)  # , **plot_kwargs
+
+    def format_ds(self):
+        red_slice = self.update_method().copy()
+        del (red_slice[self.dim])
+
+        ds = self.ds
+        for x in red_slice.keys():
+            if x in self.da.coords.keys():
+                ds = ds.sel({x: red_slice[x]})
+            else:
+                ds = ds.isel({x: red_slice[x]})
+        ds = ds.mean(list(red_slice.keys()))
+
+        test = broadcast(*[ds[var] for var in ds.data_vars.keys()])
+        for i in test:
+            print(i.dims)
+        return list(test)
+
+    @staticmethod
+    def init_ds(ds, var):
+        """
+        This function rearranges ds so that var is in the first position
+        :param ds: xarray.Dataset
+        :param var: Hashable name of the data_variable
+        :return: Rearranged Dataset
+        """
+        data_vars = list(ds.data_vars.keys())
+        if not var in data_vars:
+            raise ValueError('var argument was not found in data_vars')
+        data_vars.remove(var)
+        data_vars.insert(0, var)
+        ds = merge([ds[key] for key in data_vars])
+        return ds
 
     def update_plot(self):
-        data = self.reduced_da()
-        x_data = data[self.dim].data
-        y_data = data.data
-        self.ax.autoscale_view()
-        if self.log:
-            min = data.where(data>0).min()
-        else:
-            min = data.min()
-        if self.orientation == 'x':
-            self.plot[0].set_data(x_data, y_data)
+        if self.mode == 'da':
+            data = self.reduced_da()
+            x_data = data[self.dim].data
+            y_data = data.data
+            self.ax.autoscale_view()
+            if self.log:
+                minim = data.where(data>0).min()
+            else:
+                minim = data.min()
+            if self.orientation == 'x':
+                self.plot[0].set_data(x_data, y_data)
+                if self.autoscale:
+                    self.ax.set_ylim(minim, data.max())
+            elif self.orientation == 'y':
+                self.plot[0].set_data(y_data, x_data)
+                if self.autoscale:
+                    self.ax.set_xlim(minim, data.max())
+        elif self.mode == 'ds':
+            datas = self.format_ds()
+            minim = []
+            maxim = []
+            for i, data in enumerate(datas):
+                x_data = data[self.dim].data
+                y_data = data.data
+                if self.log:
+                    minim.append(data.where(data > 0).min())
+                else:
+                    minim.append(data.min())
+                maxim.append(data.max())
+                if self.orientation == 'x':
+                    self.plot[i].set_data(x_data, y_data)
+                elif self.orientation == 'y':
+                    self.plot[i].set_data(y_data, x_data)
+            minim = min(minim)
+            maxim = max(maxim)
             if self.autoscale:
-                self.ax.set_ylim(min, data.max())
-        elif self.orientation == 'y':
-            self.plot[0].set_data(y_data, x_data)
-            if self.autoscale:
-                self.ax.set_xlim(min, data.max())
+                if self.orientation == 'y':
+                    self.ax.set_xlim(minim, maxim)
+                if self.orientation == 'x':
+                    self.ax.set_ylim(minim, maxim)
         self.fig.canvas.draw()
 
     def on_click_log(self, label):
@@ -74,7 +150,6 @@ class SlicePlot1D:
 
 
     def reduced_da(self):
-        # TODO: Offer multiple reduce methods
         red_slice = self.update_method().copy()
         del (red_slice[self.dim])
         da = self.da
@@ -87,12 +162,21 @@ class SlicePlot1D:
         return da
 
 class SlicePlot:
-    def __init__(self, da, ax, x_dim, y_dim, update_method, fig=None, plot_kwargs=None):
+    def __init__(self, da, ax, x_dim, y_dim, update_method, var=None, fig=None, plot_kwargs=None):
         fig.canvas.mpl_connect('key_press_event', self.on_key_press)
         if plot_kwargs is None:
             plot_kwargs = {}
         self.ax = ax
-        self.da = da
+        self.var = var
+        if isinstance(da, DataArray):
+            self.mode = 'da'
+            self.da = da
+        elif isinstance(da, Dataset):
+            self.mode = 'ds'
+            self.da = da[var]
+            self.ds = da
+        else:
+            raise TypeError('da must be an xarray DataArray or Dataset')
         self.fig = fig
         # print(dir(self.fig.canvas.manager))
         self.fig.canvas.manager.set_window_title(f'Explorer: {y_dim} vs. {x_dim}')
@@ -100,6 +184,7 @@ class SlicePlot:
         self.update_method = update_method
         self.x_dim = x_dim
         self.y_dim = y_dim
+        print(plot_kwargs)
         self.plot = self.reduced_da().plot(x=x_dim, y=y_dim, **plot_kwargs)
 
         self.ax_xline = self.fig.add_axes([0.15, 0.05, 0.075, 0.075])
@@ -114,7 +199,7 @@ class SlicePlot:
 
         self.log_color = False
         self.ax_check_log_color = self.fig.add_axes([0.35, 0.05, 0.15, 0.075])
-        self.check_log = CheckButtons(ax=self.ax_check_log_color, labels=['Log Color', 'Autoscale'], actives=[False,True])
+        self.check_log = CheckButtons(ax=self.ax_check_log_color, labels=['Log Color', 'Autoscale'], actives=[False, True])
         self.check_log.on_clicked(self.on_click_log_color)
         self.autoscale = True
 
@@ -128,7 +213,6 @@ class SlicePlot:
         self.fig.canvas.mpl_connect('scroll_event', self.on_scroll)
 
 
-        # self.da.plot.pcolormesh(x=x_dim, y=y_dim, ax=ax, **plot_kwargs)
         self.RS = RectangleSelector(self.ax, self.line_select_callback,
                                     useblit=True,
                                     button=[1, 3],  # don't use middle button
@@ -139,7 +223,6 @@ class SlicePlot:
         self.set_rectangle(self.update_method())
 
     def reduced_da(self):
-        # TODO: Offer multiple reduce methods
         red_slice = self.update_method().copy()
         for i in [self.x_dim, self.y_dim]:
             del(red_slice[i])
@@ -154,12 +237,24 @@ class SlicePlot:
         return da
 
     def on_click_xline(self, event):
-        self.spx = SlicePlot1D(self.da, self.x_dim, self.update_method, 'x')
+        if self.mode == 'ds':
+            data = self.ds
+        elif self.mode == 'da':
+            data = self.da
+        else:
+            raise AttributeError('SlicePlot.mode must be "da" or "ds"')
+        self.spx = SlicePlot1D(data, self.x_dim, self.update_method, 'x', var=self.var)
         self.spx.ax.sharex(self.ax)
         plt.show()
 
     def on_click_yline(self, event):
-        self.spy = SlicePlot1D(self.da, self.y_dim, self.update_method, 'y')
+        if self.mode == 'ds':
+            data = self.ds
+        elif self.mode == 'da':
+            data = self.da
+        else:
+            raise AttributeError('SlicePlot.mode must be "da" or "ds"')
+        self.spy = SlicePlot1D(data, self.y_dim, self.update_method, 'y', var=self.var)
         self.spy.ax.sharey(self.ax)
         plt.show()
 
@@ -183,11 +278,11 @@ class SlicePlot:
     def update_plot(self):
         data = self.reduced_da().transpose(self.y_dim, self.x_dim).data
         self.plot.set_array(data)
+        if self.autoscale:
+            self.plot.autoscale()
         lower, upper = self.plot.get_clim()
         self.text_lower.set_val(f'{lower:.2e}')
         self.text_upper.set_val(f'{upper:.2e}')
-        if self.autoscale:
-            self.plot.autoscale()
         self.fig.canvas.draw()
         if self.spx is not None:
             self.spx.update_plot()
@@ -249,14 +344,24 @@ class SlicePlot:
 
 
 class Explorer:
-    def __init__(self, da, cuts='minimal', save_path = 'ROI.sl', plot_kwargs=None):
+    def __init__(self, da, cuts='minimal', var=None, save_path = 'ROI.sl', plot_kwargs=None, dimensions=None):
         self.save_path = save_path
         if plot_kwargs is None:
             plot_kwargs = {}
-        self.da = da
-        self.plot_axes = list(combinations(da.dims, 2))
+        if isinstance(da, DataArray):
+            self.mode = 'da'
+            self.da = da
+        elif isinstance(da, Dataset):
+            self.mode = 'ds'
+            self.da = da[var]
+            self.ds = da
+        else:
+            raise TypeError('da must be an xarray DataArray or Dataset')
+        self.plot_axes = list(combinations(self.da.dims, 2))
+
+
         if cuts == 'minimal':
-            self.plot_axes = self.plot_axes[:len(da.shape)-1]
+            self.plot_axes = self.plot_axes[:len(self.da.shape)-1]
         elif cuts == 'full':
             pass
         else:
@@ -294,7 +399,7 @@ class Explorer:
                     except ValueError:
                         pass
                 print('yep')
-            self.axes.append(SlicePlot(da, ax, x_dim, y_dim, self.update, fig=fig, plot_kwargs=plot_kwargs))
+            self.axes.append(SlicePlot(da, ax, x_dim, y_dim, self.update, var=var, fig=fig, plot_kwargs=plot_kwargs))
 
     def close_all(self, event):
         for x in self.axes:
