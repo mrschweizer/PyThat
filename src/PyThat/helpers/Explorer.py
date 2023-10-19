@@ -16,6 +16,23 @@ from xarray import broadcast
 from xarray import merge
 import xarray as xr
 
+def load_record(path='ROI.sl'):
+    with open(path, 'rb') as f:
+        regions = load(f)
+        return regions
+
+def reduce_ds(ds, hyper_slice, remaining_dims):
+    red_slice = hyper_slice.copy()
+    for i in remaining_dims:
+        del (red_slice[i])
+    for x in red_slice.keys():
+        if x in ds.coords.keys():
+            ds = ds.sel({x: red_slice[x]})
+        else:
+            ds = ds.isel({x: red_slice[x]})
+    da = ds.mean(list(red_slice.keys()))
+    return da
+
 class SlicePlot1D:
     def __init__(self, da, dim, update_method, orientation, var=None, plot_kwargs=None):
         if plot_kwargs is not None:
@@ -54,23 +71,6 @@ class SlicePlot1D:
             test = merge(self.format_ds()).to_array()
             self.plot = test.plot(ax=self.ax, hue='variable', **plot_orientation)  # , **plot_kwargs
 
-    def format_ds(self):
-        red_slice = self.update_method().copy()
-        del (red_slice[self.dim])
-
-        ds = self.ds
-        for x in red_slice.keys():
-            if x in self.da.coords.keys():
-                ds = ds.sel({x: red_slice[x]})
-            else:
-                ds = ds.isel({x: red_slice[x]})
-        ds = ds.mean(list(red_slice.keys()))
-
-        test = broadcast(*[ds[var] for var in ds.data_vars.keys()])
-        for i in test:
-            print(i.dims)
-        return list(test)
-
     @staticmethod
     def init_ds(ds, var):
         """
@@ -80,7 +80,7 @@ class SlicePlot1D:
         :return: Rearranged Dataset
         """
         data_vars = list(ds.data_vars.keys())
-        if not var in data_vars:
+        if var not in data_vars:
             raise ValueError('var argument was not found in data_vars')
         data_vars.remove(var)
         data_vars.insert(0, var)
@@ -148,7 +148,6 @@ class SlicePlot1D:
 
         self.update_plot()
 
-
     def reduced_da(self):
         red_slice = self.update_method().copy()
         del (red_slice[self.dim])
@@ -160,6 +159,24 @@ class SlicePlot1D:
                 da = da.isel({x: red_slice[x]})
         da = da.mean(list(red_slice.keys()))
         return da
+
+    def format_ds(self):
+        red_slice = self.update_method().copy()
+        del (red_slice[self.dim])
+
+        ds = self.ds
+        for x in red_slice.keys():
+            if x in self.da.coords.keys():
+                ds = ds.sel({x: red_slice[x]})
+            else:
+                ds = ds.isel({x: red_slice[x]})
+        ds = ds.mean(list(red_slice.keys()))
+
+        test = broadcast(*[ds[var] for var in ds.data_vars.keys()])
+        for i in test:
+            print(i.dims)
+        return list(test)
+
 
 class SlicePlot:
     def __init__(self, da, ax, x_dim, y_dim, update_method, var=None, fig=None, plot_kwargs=None):
