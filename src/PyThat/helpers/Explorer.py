@@ -33,13 +33,15 @@ def reduce_ds(ds, hyper_slice, remaining_dims):
     da = ds.mean(list(red_slice.keys()))
     return da
 
+def broadcast_ds(ds):
+    return merge(broadcast(*[ds[var] for var in ds.data_vars.keys()]))
+
 class SlicePlot1D:
     def __init__(self, da, dim, update_method, orientation, var=None, plot_kwargs=None):
         if plot_kwargs is not None:
             self.plot_kwargs = plot_kwargs.copy()
         else:
             self.plot_kwargs = {}
-        print(self.plot_kwargs)
         self.var = var
         if isinstance(da, DataArray):
             self.mode = 'da'
@@ -137,7 +139,6 @@ class SlicePlot1D:
                 self.log = True
                 f('log')
             elif self.log:
-                print('linear')
                 self.log = False
                 f('linear')
         elif label == 'Autoscale':
@@ -173,8 +174,6 @@ class SlicePlot1D:
         ds = ds.mean(list(red_slice.keys()))
 
         test = broadcast(*[ds[var] for var in ds.data_vars.keys()])
-        for i in test:
-            print(i.dims)
         return list(test)
 
 
@@ -195,13 +194,11 @@ class SlicePlot:
         else:
             raise TypeError('da must be an xarray DataArray or Dataset')
         self.fig = fig
-        # print(dir(self.fig.canvas.manager))
         self.fig.canvas.manager.set_window_title(f'Explorer: {y_dim} vs. {x_dim}')
         self.fig.subplots_adjust(bottom=0.28)
         self.update_method = update_method
         self.x_dim = x_dim
         self.y_dim = y_dim
-        print(plot_kwargs)
         self.plot = self.reduced_da().plot(x=x_dim, y=y_dim, **plot_kwargs)
 
         self.ax_xline = self.fig.add_axes([0.15, 0.05, 0.075, 0.075])
@@ -237,13 +234,13 @@ class SlicePlot:
                                     spancoords='pixels',
                                     interactive=True,
                                     props=dict(facecolor='red', edgecolor='black', alpha=0.05, fill=True))
+        self.grid_lock = False
         self.set_rectangle(self.update_method())
 
     def reduced_da(self):
         red_slice = self.update_method().copy()
         for i in [self.x_dim, self.y_dim]:
             del(red_slice[i])
-        # print(f'reduced slice: {red_slice}')
         da = self.da
         for x in red_slice.keys():
             if x in self.da.coords.keys():
@@ -316,9 +313,7 @@ class SlicePlot:
 
 
     def on_scroll(self, event):
-        print(self.plot.get_clim())
-        print(event.button)
-        print(event.step)
+        pass
 
     def line_select_callback(self, eclick, erelease):
         'eclick and erelease are the press and release events'
@@ -341,7 +336,6 @@ class SlicePlot:
 
     def on_key_press(self, event):
         key = event.key
-        print(key)
         if key in ['ctrl+up', 'ctrl+down', 'ctrl+left', 'ctrl+right']:
             # sl = self.update_method(None)
             ex = self.RS.extents
