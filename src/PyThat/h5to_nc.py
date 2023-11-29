@@ -10,7 +10,7 @@ import yaml
 
 
 class MeasurementTree:
-    def __init__(self, filepath, index=True, override: bool = False, chunk=None, keep_file_open=False):
+    def __init__(self, filepath, index=True, override: bool = False, chunk=None, keep_file_open=False, mode='r'):
         """
         :param filepath: r-string that points to h5 file
         :param index: optional: tuple that describes group number and group internal number
@@ -20,7 +20,7 @@ class MeasurementTree:
         self.filepath = filepath
         self.path = pl.Path(filepath).absolute()
         print(self.path)
-        self.f = h5py.File(self.path, 'r+')
+        self.f = h5py.File(self.path, mode)
         self.definition = []
         self.tree = [[]]
         self.indent_max = 0
