@@ -53,6 +53,21 @@ def mask_all_zeros(x, dims, value=0):
         mask = mask.all(dim)
     return x.where(~mask)
 
+
+def center_of_mass(da, dim, f_min=None, f_max=None):
+    """
+    Find the average value of a coordinate with values of statistical data (e.g. a peak in a spectrum)
+    :param da: xarray.DataArray for evaluation
+    :param dim: dimension along which the tracking should happen
+    :param f_min: minimum value of detection range
+    :param f_max: maximum value of detection range
+    :return: xarray.DataArray with coordinate value of the center of mass
+    """
+    weight = da.sel(Frequency_1=slice(f_min, f_max))
+    f = da[dim].weighted(weight).mean(dim)
+    return f
+
+
 def find_edge(da, dim, f_min=None, f_max=None, flank = 'positive', log_detect = False, norm=False):
     """
     This function uses a simple center of mass approach to treck edges in the signal.\n
