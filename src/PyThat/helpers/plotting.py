@@ -82,7 +82,7 @@ def _check_styles(da, styles):
     return style_values
 
 
-def plot_multidim_line(da, styles=None, x=None, hue=None, ax=None, multidim_name='m'):
+def plot_multidim_line(da, styles=None, x=None, hue=None, ax=None, multidim_name='m', plot_kwargs={}):
     """
     Wrapper for xarray.plot.line to plot the data, so that every dimension is associated to a line style parameter\
     (like hue)
@@ -104,4 +104,4 @@ up    :param styles: dict of tuples: {dimension name: (style parameter, list of 
     da_red = da.stack(**{multidim_name: dims}, create_index=False)
     c_cycler = multidim_cycler(**dict(style_values))
     ax.set_prop_cycle(c_cycler)
-    da_red.plot(x=x, hue=hue, ax=ax)
+    da_red.plot(x=x, hue=hue, ax=ax, **plot_kwargs)
