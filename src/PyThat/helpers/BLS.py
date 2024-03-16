@@ -53,6 +53,38 @@ def mask_all_zeros(x, dims, value=0):
         mask = mask.all(dim)
     return x.where(~mask)
 
+def find_edge(da, dim, f_min=None, f_max=None, flank = 'positive', log_detect = False, norm=False):
+    """
+    This function uses a simple center of mass approach to treck edges in the signal.\n
+    It can improve the signal, when the slope of the edge spans across multiple data points.
+    :param da: xarray.DataArray for evaluation
+    :param dim: dimension along which the edge tracking should happen
+    :param f_min: minimum value for detection of the edge
+    :param f_max: maximum value for detection of the edge
+    :param flank: can be 'positive' or 'negative', depending on the direction of the edge
+    :param log_detect: use logarithmic detection, can be helpful for exponential edges
+    :param norm: normalize data before edge detection
+    :return: xarray.DataArray with coordinate value of the center of mass of the selected edge
+    """
+    from numpy import log
+    if log_detect:
+        da = da.rolling(dict(Frequency_1=5)).mean()
+        da = log(da.where(da>0))
+    da_diff = da.differentiate(dim)
+    da_diff = da_diff.sel(Frequency_1=slice(f_min, f_max))
+    if flank == 'negative':
+        da_diff = -da_diff
+    elif flank == 'positive':
+        pass
+    if norm:
+        da_diff = da_diff/da_diff.max(dim)
+    if not log_detect:
+        da_diff = da_diff.where((da_diff >= 0), 0)
+    da_diff = da_diff.fillna(0)
+    da_diff = da_diff.where(da_diff>0, 0).fillna(0)
+    f = da[dim].weighted(da_diff).mean(dim)
+    return f
+
 
 xarray.DataArray.norm_on_FO = norm_on_FO
 xarray.Dataset.norm_on_FO = norm_on_FO
