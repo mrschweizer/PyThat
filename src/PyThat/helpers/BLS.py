@@ -86,7 +86,6 @@ def find_edge(da, dim, f_min=None, f_max=None, flank = 'positive', log_detect = 
         da = da.rolling({dim: 5}).mean()
         da = log(da.where(da>0))
     da_diff = da.differentiate(dim)
-    da_diff = da_diff.sel(Frequency_1=slice(f_min, f_max))
     da_diff = da_diff.sel({dim: slice(f_min, f_max)})
     if flank == 'negative':
         da_diff = -da_diff
