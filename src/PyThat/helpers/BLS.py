@@ -63,7 +63,7 @@ def center_of_mass(da, dim, f_min=None, f_max=None):
     :param f_max: maximum value of detection range
     :return: xarray.DataArray with coordinate value of the center of mass
     """
-    weight = da.sel(Frequency_1=slice(f_min, f_max))
+    weight = da.sel({dim: slice(f_min, f_max)})
     f = da[dim].weighted(weight).mean(dim)
     return f
 
@@ -83,10 +83,11 @@ def find_edge(da, dim, f_min=None, f_max=None, flank = 'positive', log_detect = 
     """
     from numpy import log
     if log_detect:
-        da = da.rolling(dict(Frequency_1=5)).mean()
+        da = da.rolling({dim: 5}).mean()
         da = log(da.where(da>0))
     da_diff = da.differentiate(dim)
     da_diff = da_diff.sel(Frequency_1=slice(f_min, f_max))
+    da_diff = da_diff.sel({dim: slice(f_min, f_max)})
     if flank == 'negative':
         da_diff = -da_diff
     elif flank == 'positive':
