@@ -63,7 +63,7 @@ def center_of_mass(da, dim, f_min=None, f_max=None):
     :param f_max: maximum value of detection range
     :return: xarray.DataArray with coordinate value of the center of mass
     """
-    weight = da.sel({dim: slice(f_min, f_max)})
+    weight = da.sel({dim: slice(f_min, f_max)}).fillna(0)
     f = da[dim].weighted(weight).mean(dim)
     return f
 
