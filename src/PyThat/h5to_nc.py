@@ -137,6 +137,7 @@ class MeasurementTree:
         self.definition = {self.check_for_sp_char(i): self.convert_to_dict(k) for (i, k) in self.f['scan_definition'].items()}
         if 'tree_view' in self.definition.keys():
             del(self.definition['tree_view'])
+        self.definition = self.filter_sort_rows(self.definition)
         self.devices = {self.check_for_sp_char(i): self.convert_to_dict(k, truncate=True) for (i, k) in self.f['devices'].items()}
         self.labbook = {self.check_for_sp_char(i): self.convert_to_dict(k) for (i, k) in self.f['labbook'].items()}
         self.logs = self.convert_to_dict(self.f['measurement/log'])
@@ -632,6 +633,17 @@ class MeasurementTree:
                 a[key] = z
         return a
 
+    @staticmethod
+    def filter_sort_rows(definition):
+        import re
+        """Filter self.definition to only include row_xx datasets and sort them to follow numeric order \
+         instead of alphabetical order"""
+        sorting = {}
+        for i in definition.keys():
+            m = re.match('row\_([0-9]+)', i)
+            if m is not None:
+                sorting[i] = int(m[1])
+        return {k: definition[k] for k in [k for k, _ in sorted(sorting.items(), key=lambda item: item[1])]}
 
 class Group:
     def __init__(self, m_tree: MeasurementTree):
